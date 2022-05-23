@@ -2,13 +2,7 @@
 #include <iostream>
 
 chip8::chip8() {
-    for (int i = 0; i <16; ++i) {
-        memory[FONTSIZE_ADRR + i] = font [i];
-    }
-}
-
-void chip8::LoadRom(FILE *ptr) {
-    //TODO Implement this!
+    mem.write(font, FONT_SIZE, FONT_ADRR);
 }
 
 void chip8::interpret_instruction (uint16_t inst) {
@@ -63,4 +57,26 @@ void chip8::interpret_0_group(uint16_t inst) {
         default:
             std::cout << "Unsupported command" << std::endl;
     }
+}
+
+void chip8::update() {
+    //TODO implement this
+}
+
+bool chip8::load_rom(const std::string& rom_path) {
+    FILE* fp = fopen(rom_path.c_str(), "r");
+    if (!fp) {
+        return false;
+    }
+
+    uint16_t buffer [4096];
+    size_t read_size = fread(buffer, sizeof(*buffer), 4096 ,fp);
+    if(read_size == 0) {
+        return false;
+    }
+
+    mem.write(buffer, read_size, START_ROM_ADDRESS);
+
+    fclose(fp);
+    return true;
 }
