@@ -13,6 +13,8 @@ public:
 
     size_t write (uint16_t* buffer, size_t buffer_size, uint16_t start_position);
 
+    uint16_t read (uint16_t position);
+
 private:
     std::vector <uint16_t> _ram {};
 };

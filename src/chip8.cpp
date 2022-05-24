@@ -3,6 +3,8 @@
 
 chip8::chip8() {
     mem.write(font, FONT_SIZE, FONT_ADRR);
+
+    program_counter = START_PROGRAM_ADDRESS;
 }
 
 void chip8::interpret_instruction (uint16_t inst) {
@@ -12,7 +14,7 @@ void chip8::interpret_instruction (uint16_t inst) {
             break;
         case 0x1000:
             //jump to address in NNN
-            program_counter = reinterpret_cast<uint16_t *>(inst & 0x0FFF);
+            //program_counter = reinterpret_cast<uint16_t *>(inst & 0x0FFF);
             break;
         case 0x2000:
             //Call the subroutine at address NNN. It increments SP, puts the current PC at the top of the stack and sets PC to the address NNN
@@ -60,7 +62,10 @@ void chip8::interpret_0_group(uint16_t inst) {
 }
 
 void chip8::update() {
-    //TODO implement this
+    uint16_t instruction = mem.read(program_counter);
+    program_counter ++;
+
+    // TODO interpret instruction here
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -75,7 +80,7 @@ bool chip8::load_rom(const std::string& rom_path) {
         return false;
     }
 
-    mem.write(buffer, read_size, START_ROM_ADDRESS);
+    mem.write(buffer, read_size, START_PROGRAM_ADDRESS);
 
     fclose(fp);
     return true;

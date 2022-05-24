@@ -15,3 +15,7 @@ size_t memory::write(uint16_t *buffer, size_t buffer_size, uint16_t start_positi
 
     return buffer_size;
 }
+
+uint16_t memory::read(uint16_t position) {
+    return _ram.at(position);
+}

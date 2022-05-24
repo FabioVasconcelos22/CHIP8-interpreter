@@ -9,11 +9,11 @@ int main () {
     unsigned int delta_time = 1 / (float) frame_rate * 1000;
 
     chip8 cpu;
+    cpu.load_rom("roms/IBM_Logo.ch8");
 
-    /*for (;;) {
+    for (;;) {
         cpu.update();
-
         std::this_thread::sleep_for(std::chrono::milliseconds (delta_time));
-    }*/
+    }
     return 0;
 }
