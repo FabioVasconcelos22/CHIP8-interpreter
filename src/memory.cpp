@@ -6,7 +6,7 @@ memory::memory(int size) {
     _ram.resize(size);
 }
 
-size_t memory::write(uint16_t *buffer, size_t buffer_size, uint16_t start_position) {
+size_t memory::write(uint8_t *buffer, size_t buffer_size, uint16_t start_position) {
     if (start_position + buffer_size > _ram.capacity()) {
         return -1;
     }
@@ -17,5 +17,6 @@ size_t memory::write(uint16_t *buffer, size_t buffer_size, uint16_t start_positi
 }
 
 uint16_t memory::read(uint16_t position) {
-    return _ram.at(position);
+    uint16_t instruction = _ram.at(position) << 8 | _ram.at(position +1);
+    return instruction;
 }
