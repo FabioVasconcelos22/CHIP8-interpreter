@@ -36,15 +36,13 @@ private:
     void interpret_E_group (uint16_t const & inst);
     void interpret_F_group (uint16_t const & inst);
 
-    uint16_t program_counter;
-    uint8_t index_register [16];
-    uint16_t index_address {};
-    std::stack <uint16_t> stack {};
-    uint8_t delay {};
-    uint8_t sound {};
-    uint8_t variable [16] {};
-
-    memory mem  {4096};
+    uint16_t _program_counter;
+    uint8_t _registers [16];
+    uint16_t _index_register {};
+    std::stack <uint16_t> _stack {};
+    uint8_t _delay {};
+    uint8_t _sound {};
+    memory _ram {4096};
 
     static constexpr uint16_t START_PROGRAM_ADDRESS = 0x200;
 

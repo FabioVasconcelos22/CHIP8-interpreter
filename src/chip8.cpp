@@ -1,10 +1,11 @@
 #include "chip8.h"
 #include <iostream>
+#include <cmath>
 
 chip8::chip8() {
-    mem.write(font, FONT_SIZE, FONT_ADRR);
+    _ram.write(font, FONT_SIZE, FONT_ADRR);
 
-    program_counter = START_PROGRAM_ADDRESS;
+    _program_counter = START_PROGRAM_ADDRESS;
 }
 
 void chip8::interpret_instruction (uint16_t const & inst) {
@@ -64,7 +65,7 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 }
 
 void chip8::update() {
-    uint16_t instruction = mem.read(program_counter);
+    uint16_t instruction = _ram.read(_program_counter);
     interpret_instruction (instruction);
 
     // TODO interpret instruction here
@@ -82,7 +83,7 @@ bool chip8::load_rom(const std::string& rom_path) {
         return false;
     }
 
-    mem.write(buffer, read_size, START_PROGRAM_ADDRESS);
+    _ram.write(buffer, read_size, START_PROGRAM_ADDRESS);
 
     fclose(fp);
     return true;
@@ -92,15 +93,15 @@ void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0:
             // TODO Clear the display by setting all pixels to ‘off’.
-            program_counter += 2;
+            _program_counter += 2;
             break;
         case 0x00EE:
-            if (stack.empty()) {
-                std::cout << "stack is empty" << std::endl;
+            if (_stack.empty()) {
+                std::cout << "_stack is empty" << std::endl;
                 break;
             }
-            program_counter = stack.top();
-            stack.pop();
+            _program_counter = _stack.top();
+            _stack.pop();
             break;
         default:
             std::cout << "Unsupported command" << std::endl;
@@ -108,22 +109,22 @@ void chip8::interpret_0_group(uint16_t const & inst) {
 }
 
 void chip8::interpret_1_group(const uint16_t &inst) {
-    program_counter = inst & 0x0FFF;
+    _program_counter = inst & 0x0FFF;
 }
 
 void chip8::interpret_2_group(const uint16_t &inst) {
-    stack.push(program_counter + 2);
-    program_counter = inst & 0X0FFF;
+    _stack.push(_program_counter + 2);
+    _program_counter = inst & 0X0FFF;
 }
 
 void chip8::interpret_3_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint8_t NN = inst & 0x00FF;
 
-    if ( index_register[VX] == NN) {
-        program_counter += 4;
+    if (_registers[VX] == NN) {
+        _program_counter += 4;
     } else {
-        program_counter += 2;
+        _program_counter += 2;
     }
 }
 
@@ -131,10 +132,10 @@ void chip8::interpret_4_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint8_t NN = inst & 0x00FF;
 
-    if ( index_register[VX] == NN) {
-        program_counter += 2;
+    if (_registers[VX] == NN) {
+        _program_counter += 2;
     } else {
-        program_counter += 4;
+        _program_counter += 4;
     }
 }
 
@@ -143,10 +144,10 @@ void chip8::interpret_5_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint8_t VY = inst & 0x00F0 >> 4;
 
-    if ( index_register[VX] == index_register[VY]) {
-        program_counter += 4;
+    if (_registers[VX] == _registers[VY]) {
+        _program_counter += 4;
     } else {
-        program_counter += 2;
+        _program_counter += 2;
     }
 }
 
@@ -154,18 +155,18 @@ void chip8::interpret_6_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint16_t NN = inst & 0x00FF;
 
-    index_register[VX] = NN;
+    _registers[VX] = NN;
 
-    program_counter += 2;
+    _program_counter += 2;
 }
 
 void chip8::interpret_7_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint16_t NN = inst & 0x00FF;
 
-    index_register[VX] += NN;
+    _registers[VX] += NN;
 
-    program_counter += 2;
+    _program_counter += 2;
 }
 
 void chip8::interpret_8_group(const uint16_t &inst) {
@@ -175,73 +176,73 @@ void chip8::interpret_8_group(const uint16_t &inst) {
 
     switch (x) {
         case 0:
-            index_register[VX] = index_register[VY];
+            _registers[VX] = _registers[VY];
             break;
         case 0x01:
-            index_register[VX] |= index_register[VY];
+            _registers[VX] |= _registers[VY];
             break;
         case 0x02:
-            index_register[VX] &= index_register[VY];
+            _registers[VX] &= _registers[VY];
             break;
         case 0x03:
-            index_register[VX] ^= index_register[VY];
+            _registers[VX] ^= _registers[VY];
             break;
         case 0x04: {
-            uint16_t sum = index_register[VX] + index_register[VY];
-            variable[0x0F] = (sum > 256) ? 1 : 0;
-            index_register[VX] += index_register[VY];
+            uint16_t sum = _registers[VX] + _registers[VY];
+            _registers[0x0F] = (sum > 256) ? 1 : 0;
+            _registers[VX] += _registers[VY];
             break;
         }
         case 0x05: {
-            uint16_t diff = index_register[VX] - index_register[VY];
-            variable[0x0F] = (diff < 0) ? 1 : 0;
-            index_register[VX] -= index_register[VY];
+            uint16_t diff = _registers[VX] - _registers[VY];
+            _registers[0x0F] = (diff < 0) ? 1 : 0;
+            _registers[VX] -= _registers[VY];
             break;
         }
         case 0x06:
-            variable[0x0F] = index_register[VX] % 2;
-            index_register[VX] = index_register[VX] >> 1;
+            _registers[0x0F] = _registers[VX] % 2;
+            _registers[VX] = _registers[VX] >> 1;
             break;
         case 0x07: {
-            uint16_t diff = index_register[VY] - index_register[VX];
-            variable[0x0F] = (diff < 0) ? 1 : 0;
-            index_register[VX] = index_register[VY] - index_register[VX];
+            uint16_t diff = _registers[VY] - _registers[VX];
+            _registers[0x0F] = (diff < 0) ? 1 : 0;
+            _registers[VX] = _registers[VY] - _registers[VX];
             break;
         }
         case 0x0E:
-            variable[0x0F] = index_register[VX] >> 7;
-            index_register[VX] = index_register[VX] << 1;
+            _registers[0x0F] = _registers[VX] >> 7;
+            _registers[VX] = _registers[VX] << 1;
         default:
             std::cout << "wrong interpreter command" << std::endl;
     }
-    program_counter += 2;
+    _program_counter += 2;
 }
 
 void chip8::interpret_9_group(const uint16_t &inst) {
     uint8_t VX = 0x0F00 >> 8;
     uint8_t VY = 0x00F0 >> 4;
 
-    if (index_register[VX] != index_register[VY]) {
-        program_counter += 4;
+    if (_registers[VX] != _registers[VY]) {
+        _program_counter += 4;
     } else {
-        program_counter += 2;
+        _program_counter += 2;
     }
 }
 
 void chip8::interpret_A_group(const uint16_t &inst) {
-    index_address = inst & 0x0FFF;
-    program_counter += 2;
+    _index_register = inst & 0x0FFF;
+    _program_counter += 2;
 }
 
 void chip8::interpret_B_group(const uint16_t &inst) {
-    program_counter = variable[0] + inst & 0x0FFF;
+    _program_counter = _registers[0x00] + inst & 0x0FFF;
 }
 
 void chip8::interpret_C_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint8_t NN = inst & 0x00FF;
 
-    index_register[VX] = rand() % 256 & NN;
+    _registers[VX] = rand() % 256 & NN;
 }
 
 void chip8::interpret_D_group(const uint16_t &inst) {
@@ -259,24 +260,46 @@ void chip8::interpret_F_group(const uint16_t &inst) {
     // TODO Implement this
     switch (sub_inst) {
         case 0x07:
+            _registers[VX] = _delay;
             break;
         case 0x0A:
+            // TODO Keys
             break;
         case 0x15:
+            _delay = _registers[VX];
             break;
         case 0x18:
+            _sound = _registers[VX];
             break;
         case 0x1E:
+            _index_register += _registers[VX];
             break;
         case 0x29:
+            _index_register = _registers[VX];
             break;
-        case 0x33:
+        case 0x33: {
+            uint16_t decimal_number = _registers[VX];
+            uint16_t * ptr = &_index_register;
+
+            *ptr = decimal_number * static_cast<uint16_t>(pow(10, -3));
+            ptr[1] = decimal_number * static_cast<uint16_t>(pow(10, -2));
+            ptr[2] = decimal_number * static_cast<uint16_t>(pow(10, -1));
+        }
             break;
-        case 0x55:
+        case 0x55: {
+            uint16_t * ptr = &(_index_register);
+            for (uint16_t i = 0; i < VX ; ++i) {
+                ptr[i] = _registers[i];
+            }
+        }
             break;
         case 0x65:
+            for (uint8_t i; i < VX; ++i) {
+                _registers[i] = _ram.read(_index_register + i);
+            }
             break;
         default:
             std::cout << "Unsupported command" << std::endl;
     }
+    _program_counter += 2;
 }
