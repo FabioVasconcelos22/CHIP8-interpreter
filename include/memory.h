@@ -13,7 +13,9 @@ public:
 
     size_t write (uint8_t* buffer, size_t buffer_size, uint16_t start_position);
 
-    uint16_t read (uint16_t position);
+    uint16_t read_2bytes (uint16_t position);
+
+    void read (uint8_t* buffer, size_t size, uint16_t start_position);
 
 private:
     std::vector <uint8_t> _ram {};

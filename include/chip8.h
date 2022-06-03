@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "memory.h"
+#include "display.h"
 
 class chip8 {
 public:
@@ -43,11 +44,14 @@ private:
     uint8_t _delay {};
     uint8_t _sound {};
     memory _ram {4096};
+    display _display {"CHIP8", 320, 640};
 
     static constexpr uint16_t START_PROGRAM_ADDRESS = 0x200;
-
     static constexpr uint8_t FONT_ADRR = 0x50;
-    static constexpr short FONT_SIZE = 80;
+    static constexpr uint8_t FONT_SIZE = 80;
+    static constexpr uint8_t DISPLAY_WIDTH = 64;
+    static constexpr uint8_t DISPLAY_HEIGHT = 32;
+
     uint8_t font [FONT_SIZE] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1

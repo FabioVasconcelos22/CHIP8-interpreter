@@ -16,7 +16,13 @@ size_t memory::write(uint8_t *buffer, size_t buffer_size, uint16_t start_positio
     return buffer_size;
 }
 
-uint16_t memory::read(uint16_t position) {
-    uint16_t instruction = _ram.at(position) << 8 | _ram.at(position +1);
+uint16_t memory::read_2bytes(uint16_t position) {
+    uint16_t instruction = _ram.at(position) << 8 | _ram.at(position + 1);
     return instruction;
+}
+
+void memory::read(uint8_t *buffer, size_t size, uint16_t start_position) {
+    for ( int i = start_position; i < start_position + size; ++i) {
+        buffer [i] = _ram.at(i);
+    }
 }

@@ -67,8 +67,6 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 void chip8::update() {
     uint16_t instruction = _ram.read(_program_counter);
     interpret_instruction (instruction);
-
-    // TODO interpret instruction here
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -91,9 +89,10 @@ bool chip8::load_rom(const std::string& rom_path) {
 
 void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
-        case 0x00E0:
-            // TODO Clear the display by setting all pixels to ‘off’.
+        case 0x00E0: {
+            _display.clear();
             _program_counter += 2;
+        }
             break;
         case 0x00EE:
             if (_stack.empty()) {
@@ -180,6 +179,7 @@ void chip8::interpret_8_group(const uint16_t &inst) {
             break;
         case 0x01:
             _registers[VX] |= _registers[VY];
+            _registers[VX] |= _registers[VY];
             break;
         case 0x02:
             _registers[VX] &= _registers[VY];
@@ -246,9 +246,17 @@ void chip8::interpret_C_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_D_group(const uint16_t &inst) {
-    // TODO Draw to display
-}
+    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VY = inst & 0x00F0 >> 4;
+    uint8_t VN = inst & 0x000F;
 
+    int x_pos = _registers[VX];
+    int y_pos = _registers[VY];
+
+    uint8_t buffer[DISPLAY_HEIGHT * DISPLAY_WIDTH]{};
+
+    _ram.read(buffer, sizeof(buffer), _index_register);
+}
 void chip8::interpret_E_group(const uint16_t &inst) {
     // TODO Keys
 }
