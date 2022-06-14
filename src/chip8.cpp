@@ -3,9 +3,9 @@
 #include <cmath>
 
 chip8::chip8() {
-    _ram.write(font, FONT_SIZE, FONT_ADRR);
+    _ram.write(font, FONT_SIZE, FONT_START_ADDR);
 
-    _program_counter = START_PROGRAM_ADDRESS;
+    _program_counter = PROGRAM_START_ADDR;
 }
 
 void chip8::interpret_instruction (uint16_t const & inst) {
@@ -65,7 +65,8 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 }
 
 void chip8::update() {
-    uint16_t instruction = _ram.read(_program_counter);
+    uint8_t * inst_buffer {};
+    uint16_t instruction = _ram.read_2bytes(_program_counter);
     interpret_instruction (instruction);
 }
 
@@ -81,7 +82,7 @@ bool chip8::load_rom(const std::string& rom_path) {
         return false;
     }
 
-    _ram.write(buffer, read_size, START_PROGRAM_ADDRESS);
+    _ram.write(buffer, read_size, PROGRAM_START_ADDR);
 
     fclose(fp);
     return true;
@@ -91,7 +92,12 @@ void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0: {
             _display.clear();
-            _program_counter += 2;
+
+            int display_size = DISPLAY_WIDTH * DISPLAY_HEIGHT;
+            uint8_t buffer [display_size];
+            _ram.write(buffer, display_size, DISPLAY_START_ADDR);
+
+            _program_counter += 2; 
         }
             break;
         case 0x00EE:
@@ -151,7 +157,7 @@ void chip8::interpret_5_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_6_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint16_t NN = inst & 0x00FF;
 
     _registers[VX] = NN;
@@ -243,19 +249,40 @@ void chip8::interpret_C_group(const uint16_t &inst) {
     uint8_t NN = inst & 0x00FF;
 
     _registers[VX] = rand() % 256 & NN;
+
+    _program_counter += 2;
 }
 
 void chip8::interpret_D_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
-    uint8_t VY = inst & 0x00F0 >> 4;
+    uint8_t VX = (inst & 0x0F00) >> 8;
+    uint8_t VY = (inst & 0x00F0) >> 4;
     uint8_t VN = inst & 0x000F;
 
-    int x_pos = _registers[VX];
-    int y_pos = _registers[VY];
+    _registers[0x0F] = 0;
 
-    uint8_t buffer[DISPLAY_HEIGHT * DISPLAY_WIDTH]{};
+    int x_pos = _registers[VX] % DISPLAY_WIDTH;
+    int y_pos = _registers[VY] % DISPLAY_HEIGHT;
 
-    _ram.read(buffer, sizeof(buffer), _index_register);
+    for (int row = 0; row < VN ; ++row) {
+        uint8_t sprite_row {};
+        _ram.read(&sprite_row, 1, _index_register + row);
+
+        uint8_t screen_byte {};
+        _ram.read(&screen_byte,
+                  1,
+                  DISPLAY_START_ADDR + x_pos + ((y_pos + row) * DISPLAY_WIDTH)
+                  );
+
+        for (int bit = 0; bit < 8; ++bit) {
+            if ((sprite_row & (0x80 >> bit)) != 0 ) {
+                _registers[0x0F] = 1;
+            }
+            screen_byte ^= 1;
+        }
+        _ram.write( &screen_byte, 1, DISPLAY_START_ADDR + x_pos + (y_pos * DISPLAY_WIDTH));
+    }
+
+    _program_counter += 2;
 }
 void chip8::interpret_E_group(const uint16_t &inst) {
     // TODO Keys
@@ -264,6 +291,8 @@ void chip8::interpret_E_group(const uint16_t &inst) {
 void chip8::interpret_F_group(const uint16_t &inst) {
     uint8_t VX = inst & 0x0F00 >> 8;
     uint8_t sub_inst = inst & 0x00FF;
+
+    uint8_t * buffer;
 
     // TODO Implement this
     switch (sub_inst) {
@@ -303,7 +332,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             break;
         case 0x65:
             for (uint8_t i; i < VX; ++i) {
-                _registers[i] = _ram.read(_index_register + i);
+                _registers[i] = _ram.read_2bytes(_index_register + i);
             }
             break;
         default:

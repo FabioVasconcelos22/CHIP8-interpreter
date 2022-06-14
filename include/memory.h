@@ -15,7 +15,7 @@ public:
 
     uint16_t read_2bytes (uint16_t position);
 
-    void read (uint8_t* buffer, size_t size, uint16_t start_position);
+    bool read (uint8_t* buffer, size_t size, uint16_t start_position);
 
 private:
     std::vector <uint8_t> _ram {};

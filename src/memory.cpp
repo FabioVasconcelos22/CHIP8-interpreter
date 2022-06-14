@@ -21,8 +21,21 @@ uint16_t memory::read_2bytes(uint16_t position) {
     return instruction;
 }
 
-void memory::read(uint8_t *buffer, size_t size, uint16_t start_position) {
-    for ( int i = start_position; i < start_position + size; ++i) {
-        buffer [i] = _ram.at(i);
+bool memory::read(uint8_t * buffer, size_t size, uint16_t start_position) {
+
+    if (start_position < 0) {
+        return false;
     }
+
+    if (start_position + size > _ram.size()) {
+        return false;
+    }
+
+    int pos = 0;
+    for ( int i = start_position; i < start_position + size; ++i) {
+        buffer [pos] = _ram.at(i);
+        pos++;
+    }
+
+    return true;
 }

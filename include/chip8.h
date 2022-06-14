@@ -37,6 +37,9 @@ private:
     void interpret_E_group (uint16_t const & inst);
     void interpret_F_group (uint16_t const & inst);
 
+
+    // TODO move this varibles to memory
+
     uint16_t _program_counter;
     uint8_t _registers [16];
     uint16_t _index_register {};
@@ -44,10 +47,12 @@ private:
     uint8_t _delay {};
     uint8_t _sound {};
     memory _ram {4096};
-    display _display {"CHIP8", 320, 640};
+    display _display {"CHIP8", DISPLAY_WIDTH*10, DISPLAY_HEIGHT*10};
 
-    static constexpr uint16_t START_PROGRAM_ADDRESS = 0x200;
-    static constexpr uint8_t FONT_ADRR = 0x50;
+    static constexpr uint16_t PROGRAM_START_ADDR = 0x200;
+    static constexpr uint16_t FONT_START_ADDR = 0x500;
+    static constexpr uint16_t DISPLAY_START_ADDR = 0xF00;
+
     static constexpr uint8_t FONT_SIZE = 80;
     static constexpr uint8_t DISPLAY_WIDTH = 64;
     static constexpr uint8_t DISPLAY_HEIGHT = 32;

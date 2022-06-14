@@ -15,6 +15,8 @@ Normally divided in:
 * 0x000-0x1FF: Originally reserved for CHIP8 interpreter. 
   * 0x050-0x0A0: Stored space for 16 built in chars (0-9, A-F).
   * 0x200-0xFFF: Instructions from ROM. Any space left can be used.
+    * 0xEA0-0xEFF: call stack, variables and internal use.
+    * 0xF00-0xFFF: Display refresh
 
 ## 16-bit index register
 
@@ -102,3 +104,4 @@ The output works as XOR between the sprite and the pixel display.
 * https://en.wikipedia.org/wiki/CHIP-8
 * https://austinmorlan.com/posts/chip8_emulator/
 * https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
+* https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#dxyn-display
