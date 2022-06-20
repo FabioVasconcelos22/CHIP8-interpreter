@@ -49,8 +49,10 @@ private:
     memory _ram {4096};
     display _display {"CHIP8", DISPLAY_WIDTH*10, DISPLAY_HEIGHT*10};
 
+    bool _draw = false;
+
     static constexpr uint16_t PROGRAM_START_ADDR = 0x200;
-    static constexpr uint16_t FONT_START_ADDR = 0x500;
+    static constexpr uint16_t FONT_START_ADDR = 0x050; //standard position
     static constexpr uint16_t DISPLAY_START_ADDR = 0xF00;
 
     static constexpr uint8_t FONT_SIZE = 80;

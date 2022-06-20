@@ -68,6 +68,14 @@ void chip8::update() {
     uint8_t * inst_buffer {};
     uint16_t instruction = _ram.read_2bytes(_program_counter);
     interpret_instruction (instruction);
+
+    uint8_t gfx [(DISPLAY_WIDTH/8) * DISPLAY_HEIGHT];
+    _ram.read(gfx, DISPLAY_WIDTH * DISPLAY_HEIGHT, DISPLAY_START_ADDR);
+
+    if (_draw) {
+        _display.draw(gfx, 64);
+        _draw = false;
+    }
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -267,19 +275,38 @@ void chip8::interpret_D_group(const uint16_t &inst) {
         uint8_t sprite_row {};
         _ram.read(&sprite_row, 1, _index_register + row);
 
-        uint8_t screen_byte {};
-        _ram.read(&screen_byte,
-                  1,
-                  DISPLAY_START_ADDR + x_pos + ((y_pos + row) * DISPLAY_WIDTH)
-                  );
+        // Since x_pos%8 can be different of 0, we need to read 2 bytes from display info, from memory.
+        int memory_display_index = (x_pos % 8) + ((y_pos+row) * (DISPLAY_WIDTH/8));
+        uint8_t display_byte [2];
+        _ram.read(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
 
+        uint8_t temp_display_byte = display_byte[0] << (x_pos % 8) &
+                            display_byte[1] >> (8-(x_pos % 8));
+
+        // Collision detection
         for (int bit = 0; bit < 8; ++bit) {
-            if ((sprite_row & (0x80 >> bit)) != 0 ) {
-                _registers[0x0F] = 1;
+            if ((temp_display_byte & (0x80 >> bit)) == 1 ) {
+                if ((sprite_row & (0x80 >> bit)) == 1 ) {
+                    _registers[0xF] = 1;
+                }
             }
-            screen_byte ^= 1;
         }
-        _ram.write( &screen_byte, 1, DISPLAY_START_ADDR + x_pos + (y_pos * DISPLAY_WIDTH));
+
+
+        temp_display_byte = temp_display_byte ^ sprite_row;
+
+        for (int i = x_pos % 8 ; i < 8; ++i ) {
+            display_byte[0] &= ~(1 << i);
+        }
+
+        for (int i = 0; i < x_pos % 8; ++i) {
+            display_byte[1] &= ~(1 << i);
+        }
+
+        display_byte[0] |= (temp_display_byte >> (x_pos % 8) );
+        display_byte[1] |= (temp_display_byte << (8 - (x_pos % 8)) );
+
+        _ram.write(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
     }
 
     _program_counter += 2;
