@@ -2,7 +2,10 @@
 
 #include <iostream>
 
-display::display(const char * window_name, int width, int height) {
+display::display(const char * window_name, int width, int height) :
+    _width {width},
+    _height {height}
+{
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout << "SDL Init failed with error: " << SDL_GetError() << std::endl;
         return;
@@ -23,7 +26,8 @@ display::display(const char * window_name, int width, int height) {
         return;
     }
 
-    _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                 SDL_TEXTUREACCESS_STATIC, width, height);
     if (_texture == nullptr) {
         std::cout << "Texture could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;
@@ -37,16 +41,11 @@ display::~display() {
     SDL_Quit();
 }
 
-void display::draw(void const* buffer, int pitch) {
+void display::draw(uint32_t *pixels) {
     auto result = 0;
-    result = SDL_UpdateTexture(_texture, nullptr, buffer, pitch);
+    result = SDL_UpdateTexture(_texture, nullptr, pixels, _width * sizeof(uint32_t));
     if (result != 0) {
         std::cout << "Failed to update texture. SDL_Error: " << SDL_GetError() << std::endl;
-        return;
-    }
-    result = SDL_RenderClear(_renderer);
-    if (result != 0) {
-        std::cout << "Failed to clear render. SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
     result = SDL_RenderCopy(_renderer, _texture, nullptr, nullptr);
@@ -55,15 +54,4 @@ void display::draw(void const* buffer, int pitch) {
         return;
     }
     SDL_RenderPresent(_renderer);
-}
-
-void display::clear() {
-    auto result = 0;
-    result = SDL_RenderClear(_renderer);
-    if (result != 0) {
-        std::cout << "Failed to clear render. SDL_Error: " << SDL_GetError() << std::endl;
-        return;
-    }
-    SDL_RenderPresent(_renderer);
-
 }

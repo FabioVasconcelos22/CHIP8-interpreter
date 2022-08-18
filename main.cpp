@@ -12,9 +12,13 @@ int main () {
     cpu.load_rom("roms/IBM_Logo.ch8");
 
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            break;
+    bool running = true;
+
+    while (running) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
         }
         cpu.update();
         std::this_thread::sleep_for(std::chrono::milliseconds (delta_time));

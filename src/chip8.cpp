@@ -65,17 +65,18 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 }
 
 void chip8::update() {
-    uint8_t * inst_buffer {};
-    uint16_t instruction = _ram.read_2bytes(_program_counter);
-    interpret_instruction (instruction);
 
-    uint8_t gfx [(DISPLAY_WIDTH/8) * DISPLAY_HEIGHT];
-    _ram.read(gfx, DISPLAY_WIDTH * DISPLAY_HEIGHT, DISPLAY_START_ADDR);
+    // TODO info regarding display should be stored in memory ram
+    /*uint8_t gfx [(DISPLAY_WIDTH/8) * DISPLAY_HEIGHT] {};
+    _ram.read(gfx, DISPLAY_WIDTH/8 * DISPLAY_HEIGHT, DISPLAY_START_ADDR);*/
 
     if (_draw) {
-        _display.draw(gfx, 64);
+        _display.draw(_pixels);
         _draw = false;
     }
+
+    uint16_t instruction = _ram.read_2bytes(_program_counter);
+    interpret_instruction (instruction);
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -99,13 +100,16 @@ bool chip8::load_rom(const std::string& rom_path) {
 void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0: {
-            _display.clear();
+
+            /*_display.clear();
 
             int display_size = DISPLAY_WIDTH * DISPLAY_HEIGHT;
             uint8_t buffer [display_size];
-            _ram.write(buffer, display_size, DISPLAY_START_ADDR);
+            _ram.write(buffer, display_size, DISPLAY_START_ADDR);*/
 
-            _program_counter += 2; 
+            memset(_pixels, OFF_COLOR, sizeof(_pixels));
+            _draw = true;
+            _program_counter += 2;
         }
             break;
         case 0x00EE:
@@ -271,11 +275,12 @@ void chip8::interpret_D_group(const uint16_t &inst) {
     int x_pos = _registers[VX] % DISPLAY_WIDTH;
     int y_pos = _registers[VY] % DISPLAY_HEIGHT;
 
+    /*
     for (int row = 0; row < VN ; ++row) {
         uint8_t sprite_row {};
         _ram.read(&sprite_row, 1, _index_register + row);
 
-        // Since x_pos%8 can be different of 0, we need to read 2 bytes from display info, from memory.
+        // Since x_pos%8 can be different of 0, we need to read 2 bytes of display info, from memory.
         int memory_display_index = (x_pos % 8) + ((y_pos+row) * (DISPLAY_WIDTH/8));
         uint8_t display_byte [2];
         _ram.read(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
@@ -307,6 +312,27 @@ void chip8::interpret_D_group(const uint16_t &inst) {
         display_byte[1] |= (temp_display_byte << (8 - (x_pos % 8)) );
 
         _ram.write(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
+
+        _draw = true;
+    }*/
+
+    for (int y = 0; y < VN; ++y) {
+        uint8_t sprite_row {};
+        _ram.read(&sprite_row, 1, _index_register + y);
+        for (int x = 0; x < 8; x++) {
+            if (sprite_row & (0x80) >> x) {
+                int index =
+                        (VX + x) % DISPLAY_WIDTH +
+                        (VY + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
+                if (_pixels[index] == ON_COLOR) {
+                    _registers[0x0F] = 1;
+                    _pixels[index] = OFF_COLOR;
+                } else {
+                    _pixels[index] = ON_COLOR;
+                }
+                _draw = true;
+            }
+        }
     }
 
     _program_counter += 2;
