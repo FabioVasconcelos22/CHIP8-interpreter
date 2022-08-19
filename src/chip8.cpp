@@ -100,13 +100,6 @@ bool chip8::load_rom(const std::string& rom_path) {
 void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0: {
-
-            /*_display.clear();
-
-            int display_size = DISPLAY_WIDTH * DISPLAY_HEIGHT;
-            uint8_t buffer [display_size];
-            _ram.write(buffer, display_size, DISPLAY_START_ADDR);*/
-
             memset(_pixels, OFF_COLOR, sizeof(_pixels));
             _draw = true;
             _program_counter += 2;
@@ -135,7 +128,7 @@ void chip8::interpret_2_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_3_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
     if (_registers[VX] == NN) {
@@ -146,7 +139,7 @@ void chip8::interpret_3_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_4_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
     if (_registers[VX] == NN) {
@@ -158,8 +151,8 @@ void chip8::interpret_4_group(const uint16_t &inst) {
 
 
 void chip8::interpret_5_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
-    uint8_t VY = inst & 0x00F0 >> 4;
+    uint8_t VX = (inst & 0x0F00) >> 8;
+    uint8_t VY = (inst & 0x00F0) >> 4;
 
     if (_registers[VX] == _registers[VY]) {
         _program_counter += 4;
@@ -178,7 +171,7 @@ void chip8::interpret_6_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_7_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint16_t NN = inst & 0x00FF;
 
     _registers[VX] += NN;
@@ -187,9 +180,9 @@ void chip8::interpret_7_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_8_group(const uint16_t &inst) {
-    uint8_t VX = 0x0F00 >> 8;
-    uint8_t VY = 0x00F0 >> 4;
-    uint8_t x = 0x000F;
+    uint8_t VX = (inst & 0x0F00) >> 8;
+    uint8_t VY = (inst & 0x00F0) >> 4;
+    uint8_t x = inst & 0x000F;
 
     switch (x) {
         case 0:
@@ -237,8 +230,8 @@ void chip8::interpret_8_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_9_group(const uint16_t &inst) {
-    uint8_t VX = 0x0F00 >> 8;
-    uint8_t VY = 0x00F0 >> 4;
+    uint8_t VX = (inst & 0x0F00) >> 8;
+    uint8_t VY = (inst & 0x00F0) >> 4;
 
     if (_registers[VX] != _registers[VY]) {
         _program_counter += 4;
@@ -257,7 +250,7 @@ void chip8::interpret_B_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_C_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
     _registers[VX] = rand() % 256 & NN;
@@ -272,10 +265,11 @@ void chip8::interpret_D_group(const uint16_t &inst) {
 
     _registers[0x0F] = 0;
 
+    /*
     int x_pos = _registers[VX] % DISPLAY_WIDTH;
     int y_pos = _registers[VY] % DISPLAY_HEIGHT;
 
-    /*
+
     for (int row = 0; row < VN ; ++row) {
         uint8_t sprite_row {};
         _ram.read(&sprite_row, 1, _index_register + row);
@@ -342,7 +336,7 @@ void chip8::interpret_E_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_F_group(const uint16_t &inst) {
-    uint8_t VX = inst & 0x0F00 >> 8;
+    uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t sub_inst = inst & 0x00FF;
 
     uint8_t * buffer;
