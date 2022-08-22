@@ -265,59 +265,14 @@ void chip8::interpret_D_group(const uint16_t &inst) {
 
     _registers[0x0F] = 0;
 
-    /*
-    int x_pos = _registers[VX] % DISPLAY_WIDTH;
-    int y_pos = _registers[VY] % DISPLAY_HEIGHT;
-
-
-    for (int row = 0; row < VN ; ++row) {
-        uint8_t sprite_row {};
-        _ram.read(&sprite_row, 1, _index_register + row);
-
-        // Since x_pos%8 can be different of 0, we need to read 2 bytes of display info, from memory.
-        int memory_display_index = (x_pos % 8) + ((y_pos+row) * (DISPLAY_WIDTH/8));
-        uint8_t display_byte [2];
-        _ram.read(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
-
-        uint8_t temp_display_byte = display_byte[0] << (x_pos % 8) &
-                            display_byte[1] >> (8-(x_pos % 8));
-
-        // Collision detection
-        for (int bit = 0; bit < 8; ++bit) {
-            if ((temp_display_byte & (0x80 >> bit)) == 1 ) {
-                if ((sprite_row & (0x80 >> bit)) == 1 ) {
-                    _registers[0xF] = 1;
-                }
-            }
-        }
-
-
-        temp_display_byte = temp_display_byte ^ sprite_row;
-
-        for (int i = x_pos % 8 ; i < 8; ++i ) {
-            display_byte[0] &= ~(1 << i);
-        }
-
-        for (int i = 0; i < x_pos % 8; ++i) {
-            display_byte[1] &= ~(1 << i);
-        }
-
-        display_byte[0] |= (temp_display_byte >> (x_pos % 8) );
-        display_byte[1] |= (temp_display_byte << (8 - (x_pos % 8)) );
-
-        _ram.write(&display_byte[0], 2, DISPLAY_START_ADDR + memory_display_index);
-
-        _draw = true;
-    }*/
-
     for (int y = 0; y < VN; ++y) {
         uint8_t sprite_row {};
         _ram.read(&sprite_row, 1, _index_register + y);
         for (int x = 0; x < 8; x++) {
             if (sprite_row & (0x80) >> x) {
                 int index =
-                        (VX + x) % DISPLAY_WIDTH +
-                        (VY + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
+                        (_registers[VX] + x) % DISPLAY_WIDTH +
+                        (_registers[VY] + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
                 if (_pixels[index] == ON_COLOR) {
                     _registers[0x0F] = 1;
                     _pixels[index] = OFF_COLOR;
