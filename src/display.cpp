@@ -14,7 +14,7 @@ display::display(const char * window_name, int width, int height) :
      _window = SDL_CreateWindow(window_name,
                                        SDL_WINDOWPOS_CENTERED,
                                        SDL_WINDOWPOS_CENTERED,
-                                       width, height, 0);
+                                       _width, _height, 0);
     if (_window == nullptr) {
         std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;

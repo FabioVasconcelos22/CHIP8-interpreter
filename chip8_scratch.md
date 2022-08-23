@@ -54,6 +54,12 @@ Similar with Delay Timer. It buzzes when non-zero.
 
 From 0 to F.
 
+|  1  |  2  |  3  |  C  |
+|:---:|:---:|:---:|:---:|
+|  4  |  5  |  6  |  D  |
+|  7  |  8  |  9  |  E  |
+|  A  |  0  |  B  |  F  |
+
 ## 64x32 Monochrome Display
 
 Memory buffer with 2048 bytes (63x32).

@@ -10,6 +10,7 @@
 
 #include "memory.h"
 #include "display.h"
+#include "keyboard.h"
 
 static constexpr uint16_t PROGRAM_START_ADDR = 0x200;
 static constexpr uint16_t FONT_START_ADDR = 0x050; //standard position
@@ -21,7 +22,7 @@ static constexpr uint8_t DISPLAY_HEIGHT = 32;
 
 class chip8 {
 public:
-    chip8();
+    chip8(keyboard & keyboard);
     ~chip8() = default;
 
     void update ();
@@ -46,22 +47,24 @@ private:
     void interpret_F_group (uint16_t const & inst);
 
 
-    // TODO move this varibles to memory
+    // TODO move this variables to memory
     uint16_t _program_counter;
-    uint8_t _registers [16];
+    uint8_t _registers [16] {};
     uint16_t _index_register {};
     std::stack <uint16_t> _stack {};
     uint8_t _delay {};
     uint8_t _sound {};
-    uint32_t _pixels [DISPLAY_WIDTH * DISPLAY_HEIGHT];
+    uint32_t _pixels [DISPLAY_WIDTH * DISPLAY_HEIGHT] {};
     // ----
 
 
     memory _ram {4096};
 
     display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT};
-    bool _draw = false;
 
+    keyboard _keyboard {};
+
+    bool _draw = false;
     uint8_t font [FONT_SIZE] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1

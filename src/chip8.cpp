@@ -2,9 +2,11 @@
 #include <iostream>
 #include <cmath>
 
-chip8::chip8() {
-    _ram.write(font, FONT_SIZE, FONT_START_ADDR);
+chip8::chip8(keyboard & keyboard) :
+    _keyboard {keyboard}
 
+{
+    _ram.write(font, FONT_SIZE, FONT_START_ADDR);
     _program_counter = PROGRAM_START_ADDR;
 }
 
@@ -283,18 +285,33 @@ void chip8::interpret_D_group(const uint16_t &inst) {
             }
         }
     }
-
+uint8_t * buffer;
     _program_counter += 2;
 }
 void chip8::interpret_E_group(const uint16_t &inst) {
-    // TODO Keys
+    uint8_t VX = (inst & 0x0F00) >> 8;
+    uint8_t sub_inst = inst & 0x00FF;
+
+    switch (sub_inst) {
+        case 0x9E:
+            if ( _keyboard.get_key_pressed() == _registers [VX]){
+                _program_counter += 4;
+            }
+            break;
+        case 0xA1:
+            if ( _keyboard.get_key_pressed() != _registers [VX]){
+                _program_counter += 4;
+            }
+            break;
+        default:
+            std::cout << "Invalid sub instruction" << std::endl;
+    }
+
 }
 
 void chip8::interpret_F_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t sub_inst = inst & 0x00FF;
-
-    uint8_t * buffer;
 
     // TODO Implement this
     switch (sub_inst) {
@@ -302,7 +319,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _registers[VX] = _delay;
             break;
         case 0x0A:
-            // TODO Keys
+            std::cin >> _registers[VX];
             break;
         case 0x15:
             _delay = _registers[VX];
