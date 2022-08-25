@@ -2,9 +2,10 @@
 
 #include <iostream>
 
-display::display(const char * window_name, int width, int height) :
+display::display(const char * window_name, int width, int height, int scale) :
     _width {width},
-    _height {height}
+    _height {height},
+    _scale {scale}
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout << "SDL Init failed with error: " << SDL_GetError() << std::endl;
@@ -12,9 +13,11 @@ display::display(const char * window_name, int width, int height) :
     }
 
      _window = SDL_CreateWindow(window_name,
-                                       SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED,
-                                       _width, _height, 0);
+                                SDL_WINDOWPOS_CENTERED,
+                                SDL_WINDOWPOS_CENTERED,
+                                _width * _scale,
+                                _height * _scale,
+                                0);
     if (_window == nullptr) {
         std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return;
@@ -41,9 +44,9 @@ display::~display() {
     SDL_Quit();
 }
 
-void display::draw(uint32_t *pixels) {
+void display::draw(uint32_t const & pixels) {
     auto result = 0;
-    result = SDL_UpdateTexture(_texture, nullptr, pixels, _width * sizeof(uint32_t));
+    result = SDL_UpdateTexture(_texture, nullptr, &pixels, _width * sizeof(uint32_t));
     if (result != 0) {
         std::cout << "Failed to update texture. SDL_Error: " << SDL_GetError() << std::endl;
         return;

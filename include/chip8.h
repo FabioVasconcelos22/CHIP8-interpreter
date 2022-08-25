@@ -60,7 +60,7 @@ private:
 
     memory _ram {4096};
 
-    display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT};
+    display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT, 10};
 
     keyboard _keyboard {};
 

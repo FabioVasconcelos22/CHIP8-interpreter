@@ -11,10 +11,10 @@ enum colors {
 
 class display {
 public:
-    display(const char * window_name, int width, int height);
+    display(const char * window_name, int width, int height, int scale);
     ~display();
 
-    void draw(uint32_t pixels[64 * 32]);
+    void draw(uint32_t const & pixels);
 
 private:
     SDL_Window* _window;
@@ -23,6 +23,7 @@ private:
 
     int _width;
     int _height;
+    int _scale;
 };
 
 

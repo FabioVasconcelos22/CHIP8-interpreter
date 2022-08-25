@@ -67,13 +67,8 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 }
 
 void chip8::update() {
-
-    // TODO info regarding display should be stored in memory ram
-    /*uint8_t gfx [(DISPLAY_WIDTH/8) * DISPLAY_HEIGHT] {};
-    _ram.read(gfx, DISPLAY_WIDTH/8 * DISPLAY_HEIGHT, DISPLAY_START_ADDR);*/
-
     if (_draw) {
-        _display.draw(_pixels);
+        _display.draw(_pixels[0]);
         _draw = false;
     }
 
@@ -225,6 +220,7 @@ void chip8::interpret_8_group(const uint16_t &inst) {
         case 0x0E:
             _registers[0x0F] = _registers[VX] >> 7;
             _registers[VX] = _registers[VX] << 1;
+            break;
         default:
             std::cout << "wrong interpreter command" << std::endl;
     }
@@ -313,7 +309,6 @@ void chip8::interpret_F_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t sub_inst = inst & 0x00FF;
 
-    // TODO Implement this
     switch (sub_inst) {
         case 0x07:
             _registers[VX] = _delay;
@@ -335,25 +330,30 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];
-            uint16_t * ptr = &_index_register;
+            std::array <uint8_t, 3> data {};
 
-            *ptr = decimal_number * static_cast<uint16_t>(pow(10, -3));
-            ptr[1] = decimal_number * static_cast<uint16_t>(pow(10, -2));
-            ptr[2] = decimal_number * static_cast<uint16_t>(pow(10, -1));
+            data.at(2) = decimal_number % 10;
+            decimal_number /= 10;
+
+            data.at(1) = decimal_number % 10;
+            decimal_number /= 10;
+
+            data.at(0) = decimal_number % 10;
+
+            _ram.write( &data.at(0), 3, _index_register);
         }
             break;
-        case 0x55: {
-            uint16_t * ptr = &(_index_register);
-            for (uint16_t i = 0; i < VX ; ++i) {
-                ptr[i] = _registers[i];
+        case 0x55:
+            for (uint8_t i = 0; i <= VX; ++i) {
+                _ram.write( &_registers[i], 1, _index_register + i);
             }
+            break;
+        case 0x65: {
+            for (uint8_t i = 0; i <= VX; ++i) {
+                _ram.read( &_registers[i], 1, _index_register + i);
+            }
+            break;
         }
-            break;
-        case 0x65:
-            for (uint8_t i; i < VX; ++i) {
-                _registers[i] = _ram.read_2bytes(_index_register + i);
-            }
-            break;
         default:
             std::cout << "Unsupported command" << std::endl;
     }
