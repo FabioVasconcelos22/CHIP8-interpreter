@@ -9,9 +9,10 @@ int main () {
     uint8_t frame_rate = 60;
     unsigned int delta_time = 1 / (float) frame_rate * 1000;
 
+
     keyboard keyboard;
     chip8 cpu (keyboard);
-    cpu.load_rom("roms/test_opcode.ch8");
+    cpu.load_rom("roms/c8_test.c8");
 
     SDL_Event event;
     bool running = true;
@@ -31,7 +32,18 @@ int main () {
             }
 
         }
-        cpu.update();
+
+        if (cpu.delay <= 0) {
+            cpu.update();
+        } else {
+            cpu.delay --;
+        }
+
+        if (cpu.sound > 0) {
+            cpu.sound --;
+            std::cout << '\a';
+        }
+
         std::this_thread::sleep_for(std::chrono::milliseconds (delta_time));
     }
     return 0;

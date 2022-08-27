@@ -62,7 +62,6 @@ void chip8::interpret_instruction (uint16_t const & inst) {
             break;
         default:
             std::cout << "Unsupported instruction" << std::endl;
-
     }
 }
 
@@ -187,7 +186,6 @@ void chip8::interpret_8_group(const uint16_t &inst) {
             break;
         case 0x01:
             _registers[VX] |= _registers[VY];
-            _registers[VX] |= _registers[VY];
             break;
         case 0x02:
             _registers[VX] &= _registers[VY];
@@ -281,7 +279,6 @@ void chip8::interpret_D_group(const uint16_t &inst) {
             }
         }
     }
-uint8_t * buffer;
     _program_counter += 2;
 }
 void chip8::interpret_E_group(const uint16_t &inst) {
@@ -302,7 +299,6 @@ void chip8::interpret_E_group(const uint16_t &inst) {
         default:
             std::cout << "Invalid sub instruction" << std::endl;
     }
-
 }
 
 void chip8::interpret_F_group(const uint16_t &inst) {
@@ -311,16 +307,16 @@ void chip8::interpret_F_group(const uint16_t &inst) {
 
     switch (sub_inst) {
         case 0x07:
-            _registers[VX] = _delay;
+            _registers[VX] = delay;
             break;
         case 0x0A:
             std::cin >> _registers[VX];
             break;
         case 0x15:
-            _delay = _registers[VX];
+            delay = _registers[VX];
             break;
         case 0x18:
-            _sound = _registers[VX];
+            sound = _registers[VX];
             break;
         case 0x1E:
             _index_register += _registers[VX];

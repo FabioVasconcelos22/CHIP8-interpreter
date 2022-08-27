@@ -27,6 +27,9 @@ public:
 
     void update ();
     bool load_rom (const std::string& rom_path);
+
+    uint8_t delay {};
+    uint8_t sound {};
 private:
     void interpret_instruction (uint16_t const & inst);
     void interpret_0_group (uint16_t const & inst);
@@ -52,8 +55,6 @@ private:
     uint8_t _registers [16] {};
     uint16_t _index_register {};
     std::stack <uint16_t> _stack {};
-    uint8_t _delay {};
-    uint8_t _sound {};
     uint32_t _pixels [DISPLAY_WIDTH * DISPLAY_HEIGHT] {};
     // ----
 
