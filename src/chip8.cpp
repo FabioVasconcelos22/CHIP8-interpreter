@@ -3,8 +3,7 @@
 #include <cmath>
 
 chip8::chip8(keyboard & keyboard) :
-    _keyboard {keyboard}
-
+    _keyboard { & keyboard}
 {
     _ram.write(font, FONT_SIZE, FONT_START_ADDR);
     _program_counter = PROGRAM_START_ADDR;
@@ -102,12 +101,11 @@ void chip8::interpret_0_group(uint16_t const & inst) {
         }
             break;
         case 0x00EE:
-            if (_stack.empty()) {
-                std::cout << "_stack is empty" << std::endl;
-                break;
+            if (!_stack.empty()) {
+                _program_counter = _stack.top();
+                _stack.pop();
             }
-            _program_counter = _stack.top();
-            _stack.pop();
+            _program_counter += 2;
             break;
         default:
             std::cout << "Unsupported command" << std::endl;
@@ -119,7 +117,7 @@ void chip8::interpret_1_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_2_group(const uint16_t &inst) {
-    _stack.push(_program_counter + 2);
+    _stack.push(_program_counter);
     _program_counter = inst & 0X0FFF;
 }
 
@@ -195,14 +193,14 @@ void chip8::interpret_8_group(const uint16_t &inst) {
             break;
         case 0x04: {
             uint16_t sum = _registers[VX] + _registers[VY];
-            _registers[0x0F] = (sum > 256) ? 1 : 0;
+            _registers[0x0F] = (sum > 255) ? 1 : 0;
             _registers[VX] += _registers[VY];
             break;
         }
         case 0x05: {
             uint16_t diff = _registers[VX] - _registers[VY];
             _registers[0x0F] = (diff < 0) ? 1 : 0;
-            _registers[VX] -= _registers[VY];
+            _registers[VX] = diff;
             break;
         }
         case 0x06:
@@ -212,7 +210,7 @@ void chip8::interpret_8_group(const uint16_t &inst) {
         case 0x07: {
             uint16_t diff = _registers[VY] - _registers[VX];
             _registers[0x0F] = (diff < 0) ? 1 : 0;
-            _registers[VX] = _registers[VY] - _registers[VX];
+            _registers[VX] = diff;
             break;
         }
         case 0x0E:
@@ -285,20 +283,30 @@ void chip8::interpret_E_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t sub_inst = inst & 0x00FF;
 
+    uint8_t key_pressed = 0xFF;
+
+    for (int i = 0; i < 16; ++i) {
+        if (_keyboard->get_key_value(i)) {
+            key_pressed = i;
+            break;
+        }
+    }
+
     switch (sub_inst) {
         case 0x9E:
-            if ( _keyboard.get_key_pressed() == _registers [VX]){
-                _program_counter += 4;
+            if ( key_pressed == _registers [VX]) {
+                _program_counter += 2;
             }
             break;
         case 0xA1:
-            if ( _keyboard.get_key_pressed() != _registers [VX]){
-                _program_counter += 4;
+            if ( key_pressed != _registers [VX]) {
+                _program_counter += 2;
             }
             break;
         default:
             std::cout << "Invalid sub instruction" << std::endl;
     }
+    _program_counter += 2;
 }
 
 void chip8::interpret_F_group(const uint16_t &inst) {
@@ -310,8 +318,13 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _registers[VX] = delay;
             break;
         case 0x0A:
-            std::cin >> _registers[VX];
-            break;
+            for (int i = 0; i < 16; ++i) {
+                if (_keyboard->get_key_value(i)) {
+                    _registers[VX] = i;
+                    break;
+                }
+            }
+            return; // return here to continue in infinite cycle till a key is pressed
         case 0x15:
             delay = _registers[VX];
             break;
@@ -322,7 +335,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _index_register += _registers[VX];
             break;
         case 0x29:
-            _index_register = _registers[VX];
+            _index_register = _registers[VX] * 5; //5 pixels per sprite
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];

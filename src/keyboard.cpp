@@ -1,61 +1,55 @@
 #include "keyboard.h"
+#include <cctype>
 
-uint8_t keyboard::get_key_pressed() const {
-    return _key;
+bool keyboard::get_key_value(uint8_t const & index) const {
+    return _keys [index];
 }
 
-void keyboard::set_key_pressed(uint8_t const & key) {
-    switch (key) {
+void keyboard::set_key(uint8_t const & key) {
+    uint8_t index = ascii_to_chip8_key (key);
+    _keys [index] = true;
+}
+
+void keyboard::clear_key(uint8_t const & key) {
+    uint8_t index = ascii_to_chip8_key (key);
+    _keys [index] = false;
+}
+
+uint8_t keyboard::ascii_to_chip8_key(const uint8_t &key) {
+    switch (std::tolower(key)) {
         case '1':
-            _key = 0x01;
-            break;
+            return 0x01;
         case '2':
-            _key = 0x02;
-            break;
+            return 0x02;
         case '3':
-            _key = 0x03;
-            break;
+            return 0x03;
+        case '4':
+            return 0x0C;
         case 'q':
-            _key = 0x04;
-            break;
+            return 0x04;
         case 'w':
-            _key = 0x05;
-            break;
+            return 0x05;
         case 'e':
-            _key = 0x06;
-            break;
-        case 'a':
-            _key = 0x07;
-            break;
-        case 's':
-            _key = 0x08;
-            break;
-        case 'd':
-            _key = 0x09;
-            break;
-        case 'z':
-            _key = 0x0A;
-            break;
-        case 'x':
-            _key = 0x00;
-            break;
-        case 'c':
-            _key = 0x0B;
-            break;
+            return 0x06;
         case 'r':
-            _key = 0x0C;
-            break;
+            return 0x0D;
+        case 'a':
+            return 0x07;
+        case 's':
+            return 0x08;
+        case 'd':
+            return 0x09;
         case 'f':
-            _key = 0x0D;
-            break;
+            return 0x0E;
+        case 'z':
+            return 0x0A;
+        case 'x':
+            return 0x00;
+        case 'c':
+            return 0x0B;
         case 'v':
-            _key = 0x0F;
-            break;
+            return 0x0F;
         default:
-            break;
+            return 0xFF;
     }
-}
-
-void keyboard::clear_key() {
-    _key = 0xFF;
 }

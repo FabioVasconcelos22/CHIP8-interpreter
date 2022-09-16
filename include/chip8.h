@@ -63,9 +63,10 @@ private:
 
     display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT, 10};
 
-    keyboard _keyboard {};
+    keyboard * _keyboard;
 
     bool _draw = false;
+
     uint8_t font [FONT_SIZE] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1

@@ -9,10 +9,9 @@ int main () {
     uint8_t frame_rate = 60;
     unsigned int delta_time = 1 / (float) frame_rate * 1000;
 
-
     keyboard keyboard;
     chip8 cpu (keyboard);
-    cpu.load_rom("roms/c8_test.c8");
+    cpu.load_rom("roms/Airplane.ch8");
 
     SDL_Event event;
     bool running = true;
@@ -24,13 +23,12 @@ int main () {
                     running = false;
                     break;
                 case SDL_KEYDOWN:
-                    keyboard.set_key_pressed(event.key.keysym.sym);
+                    keyboard.set_key(event.key.keysym.sym);
                     break;
                 case SDL_KEYUP:
-                    keyboard.clear_key();
+                    keyboard.clear_key(event.key.keysym.sym);
                     break;
             }
-
         }
 
         if (cpu.delay <= 0) {
@@ -41,7 +39,6 @@ int main () {
 
         if (cpu.sound > 0) {
             cpu.sound --;
-            std::cout << '\a';
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds (delta_time));
