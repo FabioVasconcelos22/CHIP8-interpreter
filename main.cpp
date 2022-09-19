@@ -7,7 +7,7 @@
 
 int main () {
     uint8_t frame_rate = 60;
-    unsigned int delta_time = 1 / (float) frame_rate * 1000;
+    unsigned int delta_time = 1 / (float) frame_rate*1000;
 
     keyboard keyboard;
     chip8 cpu (keyboard);
