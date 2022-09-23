@@ -240,14 +240,14 @@ void chip8::interpret_A_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_B_group(const uint16_t &inst) {
-    _program_counter = _registers[0x00] + inst & 0x0FFF;
+    _program_counter = _registers[0] + (inst & 0x0FFF);
 }
 
 void chip8::interpret_C_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
-    _registers[VX] = rand() % 256 & NN;
+    _registers[VX] = rand() % 255 & NN;
 
     _program_counter += 2;
 }
@@ -317,14 +317,21 @@ void chip8::interpret_F_group(const uint16_t &inst) {
         case 0x07:
             _registers[VX] = delay;
             break;
-        case 0x0A:
+        case 0x0A: {
+            auto key_pressed = false;
             for (int i = 0; i < 16; ++i) {
                 if (_keyboard->get_key_value(i)) {
                     _registers[VX] = i;
+                    key_pressed = true;
                     break;
                 }
             }
-            return; // return here to continue in infinite cycle till a key is pressed
+
+            if (!key_pressed) {
+                return; // return here to continue in infinite cycle till a key is pressed
+            }
+            break;
+        }
         case 0x15:
             delay = _registers[VX];
             break;
@@ -335,7 +342,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _index_register += _registers[VX];
             break;
         case 0x29:
-            _index_register = _registers[VX] * 5; //5 pixels per sprite
+            _index_register = _registers[VX] * 0x5; //5 pixels per sprite
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];

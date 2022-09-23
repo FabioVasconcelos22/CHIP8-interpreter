@@ -6,15 +6,23 @@
 #include "keyboard.h"
 
 int main () {
-    uint8_t frame_rate = 60;
-    unsigned int delta_time = 1 / (float) frame_rate*1000;
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
+    auto expected_frame_rate = 16ms;
 
     keyboard keyboard;
     chip8 cpu (keyboard);
-    cpu.load_rom("roms/Airplane.ch8");
+
+    if (! cpu.load_rom("roms/delay_timer_test.ch8")) {
+        std::cout << "Rom file not found" << std::endl;
+        exit(0);
+    }
 
     SDL_Event event;
     bool running = true;
+
+    auto timestamp = system_clock::now ();
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -31,17 +39,20 @@ int main () {
             }
         }
 
-        if (cpu.delay <= 0) {
-            cpu.update();
-        } else {
-            cpu.delay --;
-        }
+        if ((system_clock::now () - timestamp) >= expected_frame_rate) {
+            if (cpu.delay <= 0) {
+                cpu.update();
+            } else {
+                cpu.delay --;
+            }
 
-        if (cpu.sound > 0) {
-            cpu.sound --;
-        }
+            if (cpu.sound > 0) {
+                cpu.sound --;
+            }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds (delta_time));
+            timestamp = system_clock::now ();
+        }
     }
+
     return 0;
 }
