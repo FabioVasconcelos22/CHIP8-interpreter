@@ -14,7 +14,7 @@ int main () {
     keyboard keyboard;
     chip8 cpu (keyboard);
 
-    if (! cpu.load_rom("roms/delay_timer_test.ch8")) {
+    if (! cpu.load_rom("roms/chip8-test-suite.ch8")) {
         std::cout << "Rom file not found" << std::endl;
         exit(0);
     }
@@ -39,10 +39,10 @@ int main () {
             }
         }
 
+        cpu.update();
+
         if ((system_clock::now () - timestamp) >= expected_frame_rate) {
-            if (cpu.delay <= 0) {
-                cpu.update();
-            } else {
+            if (cpu.delay > 0) {
                 cpu.delay --;
             }
 
