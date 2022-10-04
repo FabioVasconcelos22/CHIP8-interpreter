@@ -15,6 +15,7 @@ public:
     ~display();
 
     void draw(uint32_t const & pixels);
+    void clear();
 
 private:
     SDL_Window* _window;

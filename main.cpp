@@ -5,16 +5,24 @@
 #include "chip8.h"
 #include "keyboard.h"
 
-int main () {
+int main (int argc, char **argv) {
     using namespace std::chrono;
     using namespace std::chrono_literals;
 
-    auto expected_frame_rate = 16ms;
+    if (argc != 3) {
+        std::cout << "Invalid program call." << std::endl;
+        std::cout << "Usage: " << std::endl;
+        std::cout << "./chip8 [file path] [frame rate]" << std::endl;
+        exit (0);
+    }
+    std::string rom = argv[1];
+
+    auto expected_frame_rate = 16ms * std::stoi(argv[2]) / 60;
 
     keyboard keyboard;
     chip8 cpu (keyboard);
 
-    if (! cpu.load_rom("roms/chip8-test-suite.ch8")) {
+    if (! cpu.load_rom(rom)) {
         std::cout << "Rom file not found" << std::endl;
         exit(0);
     }
@@ -39,9 +47,9 @@ int main () {
             }
         }
 
-        cpu.update();
-
         if ((system_clock::now () - timestamp) >= expected_frame_rate) {
+            cpu.update();
+
             if (cpu.delay > 0) {
                 cpu.delay --;
             }

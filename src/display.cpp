@@ -45,7 +45,8 @@ display::~display() {
 }
 
 void display::draw(uint32_t const & pixels) {
-    auto result = 0;
+    int result;
+
     result = SDL_UpdateTexture(_texture, nullptr, &pixels, _width * sizeof(uint32_t));
     if (result != 0) {
         std::cout << "Failed to update texture. SDL_Error: " << SDL_GetError() << std::endl;
@@ -56,5 +57,10 @@ void display::draw(uint32_t const & pixels) {
         std::cout << "Failed to copy texture to render. SDL_Error: " << SDL_GetError() << std::endl;
         return;
     }
+    SDL_RenderPresent(_renderer);
+}
+
+void display::clear() {
+    SDL_RenderClear(_renderer);
     SDL_RenderPresent(_renderer);
 }

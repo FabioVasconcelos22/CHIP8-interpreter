@@ -30,9 +30,11 @@ bool chip8::load_rom(const std::string& rom_path) {
 }
 
 void chip8::interpret_instruction (uint16_t const & inst) {
-    #ifdef DEBUG_MODE
-        std::cout << "Command: " << std::hex << (inst >> 12) << " : ";
-    #endif
+
+#ifdef DEBUG_MODE
+    std::cout << std::endl << "Command: " << std::hex << (inst >> 12) << std::endl;
+#endif
+
     switch (inst >> 12) {
         case 0:
             interpret_0_group(inst);
@@ -85,6 +87,24 @@ void chip8::interpret_instruction (uint16_t const & inst) {
         default:
             std::cout << "Unsupported instruction" << std::endl;
     }
+
+#ifdef DEBUG_MODE
+    for (int i = 0; i < 16; i+=5) {
+        for (int j=0; j<5; ++j) {
+            std::cout << "V[" << i+j << "] = " << (int)_registers[i+j] << "     ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "Program counter: " << _program_counter << std::endl;
+    std::cout << "index register: " << _index_register << std::endl;
+
+    auto tmp_stack = _stack;
+    while (!tmp_stack.empty()) {
+        std::cout << "stack: " << tmp_stack.top() << std::endl;
+        tmp_stack.pop();
+    }
+#endif
 }
 
 void chip8::update() {
@@ -104,7 +124,7 @@ void chip8::interpret_0_group(uint16_t const & inst) {
             _draw = true;
             }
 #ifdef DEBUG_MODE
-    std::cout << "0x0E0: Clear the screen" << std::endl;
+    std::cout << "|_____0x0E0" << std::endl;
 #endif
             break;
         case 0x00EE:
@@ -113,7 +133,7 @@ void chip8::interpret_0_group(uint16_t const & inst) {
                 _stack.pop();
             }
 #ifdef DEBUG_MODE
-    std::cout << "0x0EE: pop from stack PC:" << _program_counter << std::endl;
+    std::cout << "|_____0x0EE" << std::endl;
 #endif
             break;
         default:
@@ -125,29 +145,16 @@ void chip8::interpret_0_group(uint16_t const & inst) {
 
 void chip8::interpret_1_group(const uint16_t &inst) {
     _program_counter = inst & 0x0FFF;
-#ifdef DEBUG_MODE
-    std::cout << "0x1xx: set PC to:" << _program_counter << std::endl;
-#endif
 }
 
 void chip8::interpret_2_group(const uint16_t &inst) {
     _stack.push(_program_counter);
-#ifdef DEBUG_MODE
-    std::cout << "0x2xx: Stores current PC " << _program_counter << " into stack. ";
-#endif
     _program_counter = inst & 0X0FFF;
-#ifdef DEBUG_MODE
-    std::cout << "Than jumps PC to " << _program_counter << std::endl;
-#endif
 }
 
 void chip8::interpret_3_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
-
-#ifdef DEBUG_MODE
-    std::cout << "if " << _registers[VX] << " == " << NN << " jumps next opcode" << std::endl;
-#endif
 
     if (_registers[VX] == NN) {
         _program_counter += 4;
@@ -159,10 +166,6 @@ void chip8::interpret_3_group(const uint16_t &inst) {
 void chip8::interpret_4_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
-
-#ifdef DEBUG_MODE
-    std::cout << "if " << _registers[VX] << " != " << NN << " jumps next opcode" << std::endl;
-#endif
 
     if (_registers[VX] == NN) {
         _program_counter += 2;
@@ -176,10 +179,6 @@ void chip8::interpret_5_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t VY = (inst & 0x00F0) >> 4;
 
-#ifdef DEBUG_MODE
-    std::cout << "if " << (int)_registers[VX] << " == " << (int)_registers[VY] << " jumps next opcode" << std::endl;
-#endif
-
     if (_registers[VX] == _registers[VY]) {
         _program_counter += 4;
     } else {
@@ -191,12 +190,7 @@ void chip8::interpret_6_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint16_t NN = inst & 0x00FF;
 
-#ifdef DEBUG_MODE
-    std::cout << "Set register " << (int)VX << " to " << NN << std::endl;
-#endif
-
     _registers[VX] = NN;
-
     _program_counter += 2;
 }
 
@@ -205,10 +199,6 @@ void chip8::interpret_7_group(const uint16_t &inst) {
     uint16_t NN = inst & 0x00FF;
 
     _registers[VX] += NN;
-
-#ifdef DEBUG_MODE
-    std::cout << "Sum " << (int)NN << " to register " << (int)VX << ". Register[VX] = " << (int)_registers[VX] << std::endl;
-#endif
     _program_counter += 2;
 }
 
@@ -218,79 +208,50 @@ void chip8::interpret_8_group(const uint16_t &inst) {
     uint8_t x = inst & 0x000F;
 
 #ifdef DEBUG_MODE
-    std::cout << (int)x;
+    std::cout << "|_____0x" << (int)x;
 #endif
 
     switch (x) {
         case 0:
             _registers[VX] = _registers[VY];
-
-#ifdef DEBUG_MODE
-            std::cout << " Register " << (int)VX << " = Register "<< (int)VY << ". Result : " << (int)_registers[VX]  << std::endl;
-#endif
             break;
         case 0x01:
             _registers[VX] |= _registers[VY];
-#ifdef DEBUG_MODE
-            std::cout << " Register " << VX << " | Register "<< VY << ". Result : " << _registers[VX]  << std::endl;
-#endif
             break;
         case 0x02:
             _registers[VX] &= _registers[VY];
-#ifdef DEBUG_MODE
-            std::cout << " Register " << VX << " & Register "<< VY << ". Result : " << _registers[VX]  << std::endl;
-#endif
             break;
         case 0x03:
             _registers[VX] ^= _registers[VY];
-#ifdef DEBUG_MODE
-            std::cout << " Register " << VX << "  Register "<< VY << ". Result : " << _registers[VX]  << std::endl;
-#endif
             break;
         case 0x04: {
             uint16_t sum = _registers[VX] + _registers[VY];
             _registers[VX] += _registers[VY];
             _registers[0x0F] = (sum > 255) ? 1 : 0;
-#ifdef DEBUG_MODE
-            std::cout << " Register " << (int)VX << " + Register "<< (int)VY << ". Result : " << (int)_registers[VX] << ", Overflow: " << (int)_registers[0x0F] << std::endl;
-#endif
             break;
         }
         case 0x05: {
             int diff = _registers[VX] - _registers[VY];
             _registers[0x0F] = (diff < 0) ? 0 : 1;
             _registers[VX] = diff;
-#ifdef DEBUG_MODE
-            std::cout << " Register " << (int)VX << " - Register "<< (int)VY << ". Result : " << (int)_registers[VX] << ", Overflow: " << (int)_registers[0x0F] << std::endl;
-#endif
             break;
         }
         case 0x06: {
             bool flag = _registers[VX] % 2;
             _registers[VX] = _registers[VX] >> 1;
             _registers[0x0F] = flag;
-#ifdef DEBUG_MODE
-            std::cout << " Register " << (int) VX << " right shift. Result : " << (int) _registers[VX] << ", Overflow: "
-                      << (int) _registers[0x0F] << std::endl;
-#endif
             }
             break;
         case 0x07: {
             int diff = _registers[VY] - _registers[VX];
             _registers[0x0F] = (diff < 0) ? 0 : 1;
             _registers[VX] = diff;
-#ifdef DEBUG_MODE
-            std::cout << " Register " << (int)VX << " = Register "<< (int)VY << " - Register " << (int)VX << " . Result : " << (int)_registers[VX] << ", Overflow: " << (int)_registers[0x0F] << std::endl;
-#endif
             break;
         }
         case 0x0E: {
             bool flag = _registers[VX] >> 7;
             _registers[VX] = _registers[VX] << 1;
             _registers[0x0F] = flag;
-#ifdef DEBUG_MODE
-            std::cout << " Register " << VX << " left shift. Result : " << _registers[VX] << ", Overflow: " << _registers[0x0F] << std::endl;
-#endif
             }
             break;
         default:
@@ -303,10 +264,6 @@ void chip8::interpret_9_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t VY = (inst & 0x00F0) >> 4;
 
-#ifdef DEBUG_MODE
-    std::cout << "if " << _registers[VX] << " != " << _registers[VY] << " jumps next opcode" << std::endl;
-#endif
-
     if (_registers[VX] != _registers[VY]) {
         _program_counter += 4;
     } else {
@@ -317,17 +274,10 @@ void chip8::interpret_9_group(const uint16_t &inst) {
 void chip8::interpret_A_group(const uint16_t &inst) {
     _index_register = inst & 0x0FFF;
     _program_counter += 2;
-
-#ifdef DEBUG_MODE
-    std::cout << "index register =  " << _index_register << std::endl;
-#endif
 }
 
 void chip8::interpret_B_group(const uint16_t &inst) {
     _program_counter = _registers[0] + (inst & 0x0FFF);
-#ifdef DEBUG_MODE
-    std::cout << "PC =  " <<_program_counter << std::endl;
-#endif
 }
 
 void chip8::interpret_C_group(const uint16_t &inst) {
@@ -335,11 +285,6 @@ void chip8::interpret_C_group(const uint16_t &inst) {
     uint8_t NN = inst & 0x00FF;
 
     _registers[VX] = rand() % 255 & NN;
-
-#ifdef DEBUG_MODE
-    std::cout << "Random number to Register "<< VX << ".Result: " << _registers[VX] << std::endl;
-#endif
-
     _program_counter += 2;
 }
 
@@ -353,8 +298,8 @@ void chip8::interpret_D_group(const uint16_t &inst) {
     for (int y = 0; y < VN; ++y) {
         uint8_t sprite_row {};
         _ram.read(&sprite_row, 1, _index_register + y);
-        for (int x = 0; x < 8; x++) {
-            if (sprite_row & (0x80) >> x) {
+        for (int x = 0; x < 8; ++x) {
+            if (sprite_row & (0x80 >> x)) {
                 int index =
                         (_registers[VX] + x) % DISPLAY_WIDTH +
                         (_registers[VY] + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
@@ -370,9 +315,6 @@ void chip8::interpret_D_group(const uint16_t &inst) {
             }
         }
     }
-#ifdef DEBUG_MODE
-    std::cout << "Draw things" << std::endl;
-#endif
     _program_counter += 2;
 }
 void chip8::interpret_E_group(const uint16_t &inst) {
@@ -387,20 +329,16 @@ void chip8::interpret_E_group(const uint16_t &inst) {
             break;
         }
     }
-
+#ifdef DEBUG_MODE
+    std::cout << "|_____0x" << std::hex << (int)sub_inst << std::endl;
+#endif
     switch (sub_inst) {
         case 0x9E:
             if ( key_pressed == _registers [VX]) {
-#ifdef DEBUG_MODE
-                std::cout << "if " << (int)key_pressed << " == " << (int)_registers [VX] << " jumps next instruction" << std::endl;
-#endif
                 _program_counter += 2;
             }
             break;
         case 0xA1:
-#ifdef DEBUG_MODE
-            std::cout << "if " << (int)key_pressed << " != " << (int)_registers [VX] << "jumps next instruction" << std::endl;
-#endif
             if ( key_pressed != _registers [VX]) {
                 _program_counter += 2;
             }
@@ -415,15 +353,12 @@ void chip8::interpret_F_group(const uint16_t &inst) {
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t sub_inst = inst & 0x00FF;
 
-    switch (sub_inst) {
 #ifdef DEBUG_MODE
-        std::cout << (int)sub_inst;
+    std::cout << "|_____0x" << std::hex << (int)sub_inst << std::endl;
 #endif
+    switch (sub_inst) {
         case 0x07:
             _registers[VX] = delay;
-#ifdef DEBUG_MODE
-            std::cout << "Register " << VX << " = " << delay << std::endl;
-#endif
             break;
         case 0x0A: {
             auto key_pressed = false;
@@ -438,34 +373,19 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             if (!key_pressed) {
                 return; // return here to continue in infinite cycle till a key is pressed
             }
-#ifdef DEBUG_MODE
-            std::cout << "Key was been pressed, jump to next opcode" << std::endl;
-#endif
             break;
         }
         case 0x15:
             delay = _registers[VX];
-#ifdef DEBUG_MODE
-            std::cout << "Delay = Register " << VX << ". Result: " << delay << std::endl;
-#endif
             break;
         case 0x18:
             sound = _registers[VX];
-#ifdef DEBUG_MODE
-            std::cout << "Sound = Register " << VX << ". Result: " << sound << std::endl;
-#endif
             break;
         case 0x1E:
             _index_register += _registers[VX];
-#ifdef DEBUG_MODE
-            std::cout << "index register += Register " << VX << ". Result: " << _index_register << std::endl;
-#endif
             break;
         case 0x29:
             _index_register = _registers[VX] * 0x5; //5 pixels per sprite
-#ifdef DEBUG_MODE
-            std::cout << "index register = Register " << (int)VX << "*5. Result: " << _index_register << std::endl;
-#endif
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];
@@ -480,38 +400,18 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             data.at(0) = decimal_number % 10;
 
             _ram.write( &data.at(0), 3, _index_register);
-
-#ifdef DEBUG_MODE
-            std::cout << "0x33 ";
-            for (int i = 0; i < 3;++i) {
-                std::cout << "data [" << i << "] = " << (int)data.at(i) << ", ";
-            }
-            std::cout << std::endl;
-#endif
         }
             break;
         case 0x55:
             for (uint8_t i = 0; i <= VX; ++i) {
                 _ram.write( &_registers[i], 1, _index_register + i);
-#ifdef DEBUG_MODE
-                std::cout << "write register [" << i << "] = " << _index_register + i << ", ";
-#endif
             }
 
             break;
         case 0x65: {
-#ifdef DEBUG_MODE
-            std::cout << "0x65 ";
-#endif
             for (uint8_t i = 0; i <= VX; ++i) {
                 _ram.read( &_registers[i], 1, _index_register + i);
-#ifdef DEBUG_MODE
-                std::cout << "Read register [" << (int)i << "] = " << _index_register + i << ", ";
-#endif
             }
-#ifdef DEBUG_MODE
-            std::cout << std::endl;
-#endif
             break;
         }
         default:
