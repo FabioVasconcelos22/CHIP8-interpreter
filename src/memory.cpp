@@ -2,7 +2,9 @@
 
 #include <iostream>
 
-memory::memory(int size) {
+memory::memory(int size) :
+    _size {size}
+{
     _ram.resize(size);
 }
 

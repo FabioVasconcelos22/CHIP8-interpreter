@@ -9,18 +9,19 @@ int main (int argc, char **argv) {
     using namespace std::chrono;
     using namespace std::chrono_literals;
 
-    if (argc != 3) {
+    if (argc != 5) {
         std::cout << "Invalid program call." << std::endl;
         std::cout << "Usage: " << std::endl;
-        std::cout << "./chip8 [file path] [frame rate]" << std::endl;
+        std::cout << "./chip8 [file path] [frame rate, 0-cpu speed] [shift quirk, 0-false/1-true] [load store, 0-false/1-true]" << std::endl;
         exit (0);
     }
     std::string rom = argv[1];
-
-    auto expected_frame_rate = 16ms * std::stoi(argv[2]) / 60;
+    auto expected_frame_rate = 1000ms / std::stoi(argv[2]) ;
+    auto shift_quirk = std::stoi (argv[3]);
+    auto load_store_quirk = std::stoi (argv[4]);
 
     keyboard keyboard;
-    chip8 cpu (keyboard);
+    chip8 cpu (keyboard, shift_quirk, load_store_quirk);
 
     if (! cpu.load_rom(rom)) {
         std::cout << "Rom file not found" << std::endl;

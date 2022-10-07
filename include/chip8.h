@@ -22,7 +22,7 @@ static constexpr uint8_t DISPLAY_HEIGHT = 32;
 
 class chip8 {
 public:
-    chip8(keyboard & keyboard);
+    chip8(keyboard & keyboard, int shift_quirk, int load_store_quirk);
     ~chip8() = default;
 
     void update ();
@@ -66,6 +66,10 @@ private:
     keyboard * _keyboard;
 
     bool _draw = false;
+
+    bool _shift_quirk = false;
+
+    bool _load_store_quirk = false;
 
     uint8_t font [FONT_SIZE] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

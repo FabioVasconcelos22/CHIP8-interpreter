@@ -17,8 +17,14 @@ public:
 
     bool read (uint8_t* buffer, size_t size, uint16_t start_position);
 
+    inline int size () const {
+        return _size;
+    }
+
 private:
     std::vector <uint8_t> _ram {};
+
+    int _size;
 };
 
 

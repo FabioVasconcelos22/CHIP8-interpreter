@@ -4,11 +4,23 @@
 
 #define DEBUG_MODE
 
-chip8::chip8(keyboard & keyboard) :
+chip8::chip8(keyboard & keyboard, int shift_quirk, int load_store_quirk) :
     _keyboard { & keyboard}
 {
     _ram.write(font, FONT_SIZE, FONT_START_ADDR);
     _program_counter = PROGRAM_START_ADDR;
+
+    if (shift_quirk == 0) {
+        _shift_quirk = false;
+    } else {
+        _shift_quirk = true;
+    }
+
+    if (load_store_quirk == 0) {
+        _load_store_quirk = false;
+    } else {
+        _load_store_quirk = true;
+    }
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -89,8 +101,8 @@ void chip8::interpret_instruction (uint16_t const & inst) {
     }
 
 #ifdef DEBUG_MODE
-    for (int i = 0; i < 16; i+=5) {
-        for (int j=0; j<5; ++j) {
+    for (int i = 0; i < 16; i+=4) {
+        for (int j=0; j<4; ++j) {
             std::cout << "V[" << i+j << "] = " << (int)_registers[i+j] << "     ";
         }
         std::cout << std::endl;
@@ -226,32 +238,46 @@ void chip8::interpret_8_group(const uint16_t &inst) {
             break;
         case 0x04: {
             uint16_t sum = _registers[VX] + _registers[VY];
-            _registers[VX] += _registers[VY];
+            _registers[VX] = sum;
             _registers[0x0F] = (sum > 255) ? 1 : 0;
             break;
         }
         case 0x05: {
             int diff = _registers[VX] - _registers[VY];
-            _registers[0x0F] = (diff < 0) ? 0 : 1;
             _registers[VX] = diff;
+            _registers[0x0F] = (diff < 0) ? 0 : 1;
             break;
         }
-        case 0x06: {
-            bool flag = _registers[VX] % 2;
-            _registers[VX] = _registers[VX] >> 1;
-            _registers[0x0F] = flag;
+        case 0x06:
+            if (_shift_quirk) {
+                // VX = VX >> 1
+                bool flag = _registers[VX] % 2;
+                _registers[VX] = _registers[VX] >> 1;
+                _registers[0x0F] = flag;
+            } else {
+                // VX = VY >> 1
+                bool flag = _registers[VY] % 2;
+                _registers[VX] = _registers[VY] >> 1;
+                _registers[0x0F] = flag;
             }
             break;
         case 0x07: {
             int diff = _registers[VY] - _registers[VX];
-            _registers[0x0F] = (diff < 0) ? 0 : 1;
             _registers[VX] = diff;
+            _registers[0x0F] = (diff < 0) ? 0 : 1;
             break;
         }
-        case 0x0E: {
-            bool flag = _registers[VX] >> 7;
-            _registers[VX] = _registers[VX] << 1;
-            _registers[0x0F] = flag;
+        case 0x0E:
+            if (_shift_quirk) {
+                // VX = VX << 1
+                bool flag = _registers[VX] >> 7;
+                _registers[VX] = _registers[VX] << 1;
+                _registers[0x0F] = flag;
+            } else {
+                // VX = VY << 1
+                bool flag = _registers[VY] >> 7;
+                _registers[VX] = _registers[VY] << 1;
+                _registers[0x0F] = flag;
             }
             break;
         default:
@@ -289,20 +315,25 @@ void chip8::interpret_C_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_D_group(const uint16_t &inst) {
-    uint8_t VX = (inst & 0x0F00) >> 8;
-    uint8_t VY = (inst & 0x00F0) >> 4;
-    uint8_t VN = inst & 0x000F;
+    uint8_t startX = (inst & 0x0F00) >> 8;
+    uint8_t startY = (inst & 0x00F0) >> 4;
+    uint8_t height = inst & 0x000F;
 
     _registers[0x0F] = 0;
 
-    for (int y = 0; y < VN; ++y) {
+    for (int y = 0; y < height; ++y) {
         uint8_t sprite_row {};
+
+        if (_index_register + y > _ram.size()) {
+            return;
+        }
         _ram.read(&sprite_row, 1, _index_register + y);
         for (int x = 0; x < 8; ++x) {
             if (sprite_row & (0x80 >> x)) {
                 int index =
-                        (_registers[VX] + x) % DISPLAY_WIDTH +
-                        (_registers[VY] + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
+                        (_registers[startX] + x) % DISPLAY_WIDTH +
+                        (_registers[startY] + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
+
                 if (_pixels[index] == ON_COLOR) {
                     _registers[0x0F] = 1;
                     _pixels[index] = OFF_COLOR;
@@ -385,7 +416,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _index_register += _registers[VX];
             break;
         case 0x29:
-            _index_register = _registers[VX] * 0x5; //5 pixels per sprite
+            _index_register = _registers[VX] * 0x5; //5 bytes per font character
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];
@@ -407,10 +438,18 @@ void chip8::interpret_F_group(const uint16_t &inst) {
                 _ram.write( &_registers[i], 1, _index_register + i);
             }
 
+            // if not quirk, also set I = I + X + 1
+            if (!_load_store_quirk) {
+                _index_register += VX + 1;
+            }
             break;
         case 0x65: {
             for (uint8_t i = 0; i <= VX; ++i) {
                 _ram.read( &_registers[i], 1, _index_register + i);
+            }
+            // if not quirk, also set I = I + X + 1
+            if (!_load_store_quirk) {
+                _index_register += VX + 1;
             }
             break;
         }
