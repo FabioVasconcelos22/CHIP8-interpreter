@@ -416,7 +416,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _index_register += _registers[VX];
             break;
         case 0x29:
-            _index_register = _registers[VX] * 0x5; //5 bytes per font character
+            _index_register = FONT_START_ADDR + _registers[VX] * 5; //5 bytes per font character
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];
