@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "display.h"
 #include "keyboard.h"
+#include "speakers.h"
 
 static constexpr uint16_t PROGRAM_START_ADDR = 0x200;
 static constexpr uint16_t FONT_START_ADDR = 0x050; //standard position
@@ -64,6 +65,8 @@ private:
     display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT, 10};
 
     keyboard * _keyboard;
+
+    speakers _audio;
 
     bool _draw = false;
 

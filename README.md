@@ -111,3 +111,4 @@ The output works as XOR between the sprite and the pixel display.
 * https://austinmorlan.com/posts/chip8_emulator/
 * https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 * https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#dxyn-display
+* https://web.archive.org/web/20120313055436/http://www.dgames.org/beep-sound-with-sdl/
