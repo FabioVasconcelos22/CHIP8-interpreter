@@ -7,7 +7,13 @@
 
 int main (int argc, char **argv) {
     using namespace std::chrono;
-    using namespace std::chrono_literals;
+
+    auto cpu_frame_rate = 2ms; //500Hz
+    auto timers_frame_rate = 16ms; //60Hz
+
+    auto timestamp = system_clock::now ();
+    auto cpu_timestamp = system_clock::now();
+    auto timers_timestamp = system_clock::now();
 
     if (argc != 4) {
         std::cout << "Invalid program call." << std::endl;
@@ -17,30 +23,27 @@ int main (int argc, char **argv) {
     }
 
     std::string rom = argv[1];
-    auto shift_quirk = std::stoi (argv[2]);
-    auto load_store_quirk = std::stoi (argv[3]);
 
-
-    auto cpu_frame_rate = 2ms; //500Hz
-    auto timers_frame_rate = 16ms; //60Hz
+    const struct quirks {
+        bool shift;
+        bool load_store;
+    } quirks{
+            static_cast<bool>(argv[2]),
+            static_cast<bool>(argv[3])
+    };
 
     keyboard keyboard;
     speakers speakers;
 
-    chip8 cpu (keyboard, shift_quirk, load_store_quirk);
+    chip8 cpu (keyboard, quirks.shift, quirks.load_store);
 
-    if (! cpu.load_rom(rom)) {
+    if (!cpu.load_rom(rom)) {
         std::cout << "Rom file not found" << std::endl;
         exit(0);
     }
 
     SDL_Event event;
     bool running = true;
-
-    auto timestamp = system_clock::now ();
-
-    auto cpu_timestamp = system_clock::now();
-    auto timers_timestamp = system_clock::now();
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -75,11 +78,8 @@ int main (int argc, char **argv) {
                     speakers.stop();
                 }
             }
-
             timers_timestamp = system_clock::now();
         }
-
     }
-
     return 0;
 }

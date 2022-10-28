@@ -2,25 +2,14 @@
 #include <iostream>
 #include <cmath>
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
-chip8::chip8(keyboard & keyboard, int shift_quirk, int load_store_quirk) :
-    _keyboard { & keyboard}
+chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
+    _keyboard { & keyboard},
+    _shift_quirk {shift_quirk},
+    _load_store_quirk {load_store_quirk}
 {
-    _ram.write(font, FONT_SIZE, FONT_START_ADDR);
-    _program_counter = PROGRAM_START_ADDR;
-
-    if (shift_quirk == 0) {
-        _shift_quirk = false;
-    } else {
-        _shift_quirk = true;
-    }
-
-    if (load_store_quirk == 0) {
-        _load_store_quirk = false;
-    } else {
-        _load_store_quirk = true;
-    }
+    _ram.write(font.data(), font.size(), FONT_START_ADDR);
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -29,13 +18,13 @@ bool chip8::load_rom(const std::string& rom_path) {
         return false;
     }
 
-    uint8_t buffer [4096];
-    size_t read_size = fread(buffer, 1, 4096 ,fp);
+    std::array <uint8_t, MEMORY_SIZE> (buffer);
+    size_t read_size = fread(buffer.data(), 1, buffer.size() ,fp);
     if(read_size == 0) {
         return false;
     }
 
-    _ram.write(buffer, read_size, PROGRAM_START_ADDR);
+    _ram.write(buffer.data(), read_size, PROGRAM_START_ADDR);
 
     fclose(fp);
     return true;

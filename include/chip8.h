@@ -20,10 +20,11 @@ static constexpr uint16_t DISPLAY_START_ADDR = 0xF00;
 static constexpr uint8_t FONT_SIZE = 80;
 static constexpr uint8_t DISPLAY_WIDTH = 64;
 static constexpr uint8_t DISPLAY_HEIGHT = 32;
+static constexpr uint16_t MEMORY_SIZE = 4096;
 
 class chip8 {
 public:
-    chip8(keyboard & keyboard, int shift_quirk, int load_store_quirk);
+    chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk);
     ~chip8() = default;
 
     void update ();
@@ -50,21 +51,21 @@ private:
     void interpret_E_group (uint16_t const & inst);
     void interpret_F_group (uint16_t const & inst);
 
+    uint16_t _program_counter {PROGRAM_START_ADDR};
 
-    // TODO move this variables to memory
-    uint16_t _program_counter;
-    uint8_t _registers [16] {};
+    std::array <uint8_t, 16> (_registers) {};
+
     uint16_t _index_register {};
+
     std::stack <uint16_t> _stack {};
-    uint32_t _pixels [DISPLAY_WIDTH * DISPLAY_HEIGHT] {};
-    // ----
 
+    std::array <uint32_t, DISPLAY_WIDTH * DISPLAY_HEIGHT> _pixels {};
 
-    memory _ram {4096};
+    memory _ram {MEMORY_SIZE};
 
     display _display {"CHIP8", DISPLAY_WIDTH, DISPLAY_HEIGHT, 10};
 
-    keyboard * _keyboard;
+    std::unique_ptr <keyboard> _keyboard;
 
     speakers _audio;
 
@@ -74,7 +75,7 @@ private:
 
     bool _load_store_quirk = false;
 
-    uint8_t font [FONT_SIZE] = {
+    std::array <uint8_t, FONT_SIZE> (font) {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
             0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
