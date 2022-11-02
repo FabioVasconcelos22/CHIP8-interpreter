@@ -18,26 +18,28 @@ size_t memory::write(uint8_t *buffer, size_t buffer_size, uint16_t start_positio
     return buffer_size;
 }
 
-uint16_t memory::read_2bytes(uint16_t position) {
+template<typename _t>
+_t memory::read (int position) {
+    std::cout << "dimension not supported" << std::endl;
+}
+
+template<>
+uint8_t memory::read <uint8_t> (int position) {
+    uint16_t instruction = _ram.at(position);
+    return instruction;
+}
+
+template<>
+uint16_t memory::read <uint16_t> (int position) {
     uint16_t instruction = _ram.at(position) << 8 | _ram.at(position + 1);
     return instruction;
 }
 
-bool memory::read(uint8_t * buffer, size_t size, uint16_t start_position) {
-
-    if (start_position < 0) {
-        return false;
-    }
-
-    if (start_position + size > _ram.size()) {
-        return false;
-    }
-
-    int pos = 0;
-    for ( int i = start_position; i < start_position + size; ++i) {
-        buffer [pos] = _ram.at(i);
-        pos++;
-    }
-
-    return true;
+template<>
+uint32_t memory::read <uint32_t> (int position) {
+    uint32_t instruction =  _ram.at(position)       << 24 |
+                            _ram.at(position + 1)   << 16 |
+                            _ram.at(position + 3)   << 8  |
+                            _ram.at(position + 4);
+    return instruction;
 }

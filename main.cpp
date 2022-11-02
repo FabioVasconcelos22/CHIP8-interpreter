@@ -3,11 +3,16 @@
 #include <thread>
 
 #include "chip8.h"
-#include "keyboard.h"
+#include "display.h"
+
+namespace display_info {
+    static constexpr uint8_t DISPLAY_WIDTH = 64;
+    static constexpr uint8_t DISPLAY_HEIGHT = 32;
+}
 
 int main (int argc, char **argv) {
-    using namespace std::chrono;
 
+    using namespace std::chrono;
     auto cpu_frame_rate = 2ms; //500Hz
     auto timers_frame_rate = 16ms; //60Hz
 
@@ -27,13 +32,16 @@ int main (int argc, char **argv) {
     const struct quirks {
         bool shift;
         bool load_store;
-    } quirks{
+    } quirks {
             static_cast<bool>(argv[2]),
             static_cast<bool>(argv[3])
     };
 
     keyboard keyboard;
     speakers speakers;
+    display display {"CHIP8", display_info::DISPLAY_WIDTH,
+                     display_info::DISPLAY_HEIGHT, 10};
+
 
     chip8 cpu (keyboard, quirks.shift, quirks.load_store);
 
@@ -62,6 +70,9 @@ int main (int argc, char **argv) {
 
         if ((system_clock::now () - cpu_timestamp) >= cpu_frame_rate) {
             cpu_timestamp = system_clock::now ();
+            if (cpu.draw()) {
+                display.draw(*cpu.pixels());
+            }
             cpu.update();
         }
 

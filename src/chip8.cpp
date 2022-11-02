@@ -5,11 +5,11 @@
 //#define DEBUG_MODE
 
 chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
-    _keyboard { & keyboard},
+    _keyboard { &keyboard},
     _shift_quirk {shift_quirk},
     _load_store_quirk {load_store_quirk}
 {
-    _ram.write(font.data(), font.size(), FONT_START_ADDR);
+    _ram.write(font.data(), font.size(), chip8_constant::FONT_START_ADDR);
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -18,13 +18,13 @@ bool chip8::load_rom(const std::string& rom_path) {
         return false;
     }
 
-    std::array <uint8_t, MEMORY_SIZE> (buffer);
+    std::array <uint8_t, chip8_constant::MEMORY_SIZE> (buffer);
     size_t read_size = fread(buffer.data(), 1, buffer.size() ,fp);
     if(read_size == 0) {
         return false;
     }
 
-    _ram.write(buffer.data(), read_size, PROGRAM_START_ADDR);
+    _ram.write(buffer.data(), read_size, chip8_constant::PROGRAM_START_ADDR);
 
     fclose(fp);
     return true;
@@ -110,18 +110,17 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 
 void chip8::update() {
     if (_draw) {
-        _display.draw(_pixels[0]);
         _draw = false;
     }
 
-    uint16_t instruction = _ram.read_2bytes(_program_counter);
+    auto instruction = _ram.read <uint16_t> (_program_counter);
     interpret_instruction (instruction);
 }
 
 void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0: {
-            memset(_pixels, OFF_COLOR, sizeof(_pixels));
+            _pixels.fill(OFF_COLOR);
             _draw = true;
             }
 #ifdef DEBUG_MODE
@@ -316,12 +315,12 @@ void chip8::interpret_D_group(const uint16_t &inst) {
         if (_index_register + y > _ram.size()) {
             return;
         }
-        _ram.read(&sprite_row, 1, _index_register + y);
+        sprite_row = _ram.read <uint8_t> (_index_register + y);
         for (int x = 0; x < 8; ++x) {
             if (sprite_row & (0x80 >> x)) {
                 int index =
-                        (_registers[startX] + x) % DISPLAY_WIDTH +
-                        (_registers[startY] + y) % DISPLAY_HEIGHT * DISPLAY_WIDTH;
+                        (_registers[startX] + x) % chip8_constant::DISPLAY_WIDTH +
+                        (_registers[startY] + y) % chip8_constant::DISPLAY_HEIGHT * chip8_constant::DISPLAY_WIDTH;
 
                 if (_pixels[index] == ON_COLOR) {
                     _registers[0x0F] = 1;
@@ -405,7 +404,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             _index_register += _registers[VX];
             break;
         case 0x29:
-            _index_register = FONT_START_ADDR + _registers[VX] * 5; //5 bytes per font character
+            _index_register = chip8_constant::FONT_START_ADDR + _registers[VX] * 5; //5 bytes per font character
             break;
         case 0x33: {
             uint16_t decimal_number = _registers[VX];
@@ -434,7 +433,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             break;
         case 0x65: {
             for (uint8_t i = 0; i <= VX; ++i) {
-                _ram.read( &_registers[i], 1, _index_register + i);
+                _registers[i] = _ram.read <uint8_t> (_index_register+i);
             }
             // if not quirk, also set I = I + X + 1
             if (!_load_store_quirk) {

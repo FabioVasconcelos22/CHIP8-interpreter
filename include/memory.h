@@ -13,9 +13,10 @@ public:
 
     size_t write (uint8_t* buffer, size_t buffer_size, uint16_t start_position);
 
-    uint16_t read_2bytes (uint16_t position);
+    template<typename _t>
+    _t read (int position);
 
-    bool read (uint8_t* buffer, size_t size, uint16_t start_position);
+    //bool read (uint8_t* buffer, size_t size, uint16_t start_position);
 
     inline int size () const {
         return _size;

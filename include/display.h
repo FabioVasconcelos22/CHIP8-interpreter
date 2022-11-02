@@ -4,11 +4,6 @@
 
 #include <SDL2/SDL.h>
 
-enum colors {
-    ON_COLOR = 0xFFFFFFFF,
-    OFF_COLOR = 0xFF000000
-};
-
 class display {
 public:
     display(const char * window_name, int width, int height, int scale);
