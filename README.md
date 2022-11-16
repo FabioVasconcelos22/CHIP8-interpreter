@@ -1,3 +1,9 @@
+# Clone repository
+
+```
+git clone --recurse-submodules git@github.com:FabioVasconcelos22/CHIP8-interpreter.git
+```
+
 # Chip 8 description
 
 ## 16 8-bit register
