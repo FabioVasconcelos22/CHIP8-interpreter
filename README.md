@@ -1,9 +1,36 @@
-# Clone repository
+#Crash Course 
+
+## Clone the repository and submodules
 
 ```
 git clone --recurse-submodules git@github.com:FabioVasconcelos22/CHIP8-interpreter.git
 ```
 
+## Compile and run
+
+* Manually
+
+ * Create a build directory and jump inside
+
+ ```
+ cd CHIP8-interpreter ; mkdir build ; cd build
+ ```
+
+ * Build chip8 code
+ 
+ ```
+ cmake .. ; make
+ ```
+ 
+ * Run and have fun!
+ 
+ ```
+ ./CHIP8_interpreter "[ROM path between quotation marks]" [shift quirk, 0-false/1-true] [load store, 0-false/1-true]
+ 
+ ```
+  * Quirks are a trial to try to fit all the alternatives of chip , for now, ignore it and leave it to 0
+ 
+ 
 # Chip 8 description
 
 ## 16 8-bit register
