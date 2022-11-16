@@ -7,20 +7,26 @@
 #include <stack>
 #include <string>
 #include <memory>
+#include <chrono>
+
 
 #include "memory.h"
 #include "keyboard.h"
 #include "speakers.h"
+#include "display.h"
 
 namespace chip8_constant {
-    static constexpr uint16_t PROGRAM_START_ADDR = 0x200;
-    static constexpr uint16_t FONT_START_ADDR = 0x050; //standard position
-    static constexpr uint16_t DISPLAY_START_ADDR = 0xF00;
+    constexpr uint16_t PROGRAM_START_ADDR = 0x200;
+    constexpr uint16_t FONT_START_ADDR = 0x050; //standard position
 
-    static constexpr uint8_t FONT_SIZE = 80;
-    static constexpr uint8_t DISPLAY_WIDTH = 64;
-    static constexpr uint8_t DISPLAY_HEIGHT = 32;
-    static constexpr uint16_t MEMORY_SIZE = 4096;
+    constexpr uint8_t FONT_SIZE = 80;
+    constexpr uint8_t DISPLAY_WIDTH = 64;
+    constexpr uint8_t DISPLAY_HEIGHT = 32;
+    constexpr uint16_t MEMORY_SIZE = 4096;
+
+    using namespace std::chrono;
+    constexpr auto CPU_FRAME_RATE = 2ms; //500Hz
+    constexpr auto TIMERS_FRAME_RATE = 16ms; //60Hz
 }
 
 class chip8 {
@@ -30,19 +36,10 @@ public:
           bool load_store_quirk);
     ~chip8() = default;
 
-    void update ();
+    void run_instruction ();
+    void update (display & display, speakers & speakers);
     bool load_rom (const std::string& rom_path);
 
-    [[nodiscard]] inline bool draw () const {
-        return _draw;
-    }
-
-    [[nodiscard]] inline const uint32_t * pixels () const {
-        return _pixels.data();
-    }
-
-    uint8_t delay {};
-    uint8_t sound {};
 private:
     void interpret_instruction (uint16_t const & inst);
     void interpret_0_group (uint16_t const & inst);
@@ -78,9 +75,16 @@ private:
 
     bool _draw = false;
 
+    uint8_t _delay;
+    uint8_t _sound;
+
     bool _shift_quirk = false;
 
     bool _load_store_quirk = false;
+
+    std::chrono::time_point <std::chrono::system_clock> _timestamp;
+    std::chrono::time_point <std::chrono::system_clock> _cpu_timestamp;
+    std::chrono::time_point <std::chrono::system_clock> _timers_timestamp;
 
     std::array <uint8_t, chip8_constant::FONT_SIZE> (font) {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

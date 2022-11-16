@@ -10,6 +10,10 @@ chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
     _load_store_quirk {load_store_quirk}
 {
     _ram.write(font.data(), font.size(), chip8_constant::FONT_START_ADDR);
+
+    _timestamp = std::chrono::system_clock::now ();
+    _cpu_timestamp = std::chrono::system_clock::now();
+    _timers_timestamp = std::chrono::system_clock::now();
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
@@ -108,11 +112,7 @@ void chip8::interpret_instruction (uint16_t const & inst) {
 #endif
 }
 
-void chip8::update() {
-    if (_draw) {
-        _draw = false;
-    }
-
+void chip8::run_instruction() {
     auto instruction = _ram.read <uint16_t> (_program_counter);
     interpret_instruction (instruction);
 }
@@ -377,7 +377,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
 #endif
     switch (sub_inst) {
         case 0x07:
-            _registers[VX] = delay;
+            _registers[VX] = _delay;
             break;
         case 0x0A: {
             auto key_pressed = false;
@@ -395,10 +395,10 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             break;
         }
         case 0x15:
-            delay = _registers[VX];
+            _delay = _registers[VX];
             break;
         case 0x18:
-            sound = _registers[VX];
+            _sound = _registers[VX];
             break;
         case 0x1E:
             _index_register += _registers[VX];
@@ -445,4 +445,31 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             std::cout << "Unsupported command" << std::endl;
     }
     _program_counter += 2;
+}
+
+void chip8::update(display & display, speakers & speakers) {
+    if ((std::chrono::system_clock::now () - _cpu_timestamp) >= chip8_constant::CPU_FRAME_RATE) {
+        _cpu_timestamp = std::chrono::system_clock::now ();
+        if (_draw) {
+            display.draw( *_pixels.data() );
+            _draw = false;
+        }
+        run_instruction();
+    }
+
+    if ((std::chrono::system_clock::now () - _timers_timestamp) >= chip8_constant::TIMERS_FRAME_RATE) {
+        if (_delay > 0) {
+            _delay--;
+        }
+
+        if (_sound > 0) {
+            speakers.play();
+            _sound--;
+
+            if (_sound <= 0) {
+                speakers.stop();
+            }
+        }
+        _timers_timestamp = std::chrono::system_clock::now();
+    }
 }
