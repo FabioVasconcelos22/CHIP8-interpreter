@@ -16,8 +16,6 @@ public:
     template<typename _t>
     _t read (int position);
 
-    //bool read (uint8_t* buffer, size_t size, uint16_t start_position);
-
     inline int size () const {
         return _size;
     }
