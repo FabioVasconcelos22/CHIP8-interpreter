@@ -17,20 +17,20 @@ chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
 }
 
 bool chip8::load_rom(const std::string& rom_path) {
-    FILE* fp = fopen(rom_path.c_str(), "r");
-    if (!fp) {
+    std::unique_ptr<FILE> file (fopen(rom_path.c_str(), "r"));
+
+    if (!file) {
         return false;
     }
 
     std::array <uint8_t, chip8_constant::MEMORY_SIZE> (buffer);
-    size_t read_size = fread(buffer.data(), 1, buffer.size() ,fp);
+    size_t read_size = fread(buffer.data(), 1, buffer.size(), file.get());
+
     if(read_size == 0) {
         return false;
     }
 
     _ram.write(buffer.data(), read_size, chip8_constant::PROGRAM_START_ADDR);
-
-    fclose(fp);
     return true;
 }
 
