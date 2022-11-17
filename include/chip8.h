@@ -86,7 +86,7 @@ private:
     std::chrono::time_point <std::chrono::system_clock> _cpu_timestamp;
     std::chrono::time_point <std::chrono::system_clock> _timers_timestamp;
 
-    std::array <uint8_t, chip8_constant::FONT_SIZE> (font) {
+    std::array <uint8_t, chip8_constant::FONT_SIZE> font = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
             0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
