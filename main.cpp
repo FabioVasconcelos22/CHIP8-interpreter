@@ -3,7 +3,9 @@
 #include <chrono>
 
 #include "chip8.h"
-#include "display.h"
+#include "display/monitor.h"
+#include "display/display_interface.h"
+
 
 int main (int argc, char **argv) {
 
@@ -29,12 +31,15 @@ int main (int argc, char **argv) {
     };
 
     keyboard keyboard;
-    speakers speakers;
-    display display {"CHIP8",
-                     chip8_constant::DISPLAY_WIDTH,
-                     chip8_constant::DISPLAY_HEIGHT,
-                     10};
 
+    std::unique_ptr <display_interface> display = std::make_unique <monitor>(
+            "CHIP8",
+            chip8_constant::DISPLAY_WIDTH,
+            chip8_constant::DISPLAY_HEIGHT,
+            10
+            );
+
+    std::unique_ptr <sound_interface> sound = std::make_unique<speakers>();
 
     chip8 cpu (keyboard, quirks.shift, quirks.load_store);
 
@@ -61,7 +66,7 @@ int main (int argc, char **argv) {
             }
         }
 
-        cpu.update (display, speakers);
+        cpu.update (*display, *sound);
     }
     return 0;
 }

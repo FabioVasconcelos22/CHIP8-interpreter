@@ -447,7 +447,7 @@ void chip8::interpret_F_group(const uint16_t &inst) {
     _program_counter += 2;
 }
 
-void chip8::update(display & display, speakers & speakers) {
+void chip8::update(display_interface & display, sound_interface & speakers) {
     if ((std::chrono::system_clock::now () - _cpu_timestamp) >= chip8_constant::CPU_FRAME_RATE) {
         _cpu_timestamp = std::chrono::system_clock::now ();
         if (_draw) {

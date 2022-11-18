@@ -12,8 +12,8 @@
 
 #include "memory.h"
 #include "keyboard.h"
-#include "speakers.h"
-#include "display.h"
+#include "sound/speakers.h"
+#include "display/display_interface.h"
 
 namespace chip8_constant {
     constexpr uint16_t PROGRAM_START_ADDR = 0x200;
@@ -37,7 +37,7 @@ public:
     ~chip8() = default;
 
     void run_instruction ();
-    void update (display & display, speakers & speakers);
+    void update (display_interface & display, sound_interface & speakers);
     bool load_rom (const std::string& rom_path);
 
 private:

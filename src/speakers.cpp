@@ -1,4 +1,4 @@
-#include "speakers.h"
+#include "sound/speakers.h"
 
 #include <iostream>
 
@@ -70,9 +70,9 @@ void speakers::generateSamples(uint16_t* stream, int length) {
 }
 
 void audio_callback(void* userdata, uint8_t* stream, int len) {
-    auto stream_buffer = reinterpret_cast<uint16_t*>(stream);
+    auto stream_buffer = reinterpret_cast<uint16_t *>(stream);
     int length = len / 2;
-    auto beeper = reinterpret_cast<speakers*>(userdata);
+    auto beeper = reinterpret_cast<speakers *>(userdata);
 
     beeper->generateSamples(stream_buffer, length);
-    }
+}

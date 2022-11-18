@@ -1,8 +1,8 @@
-#include "display.h"
+#include "display/monitor.h"
 
 #include <iostream>
 
-display::display(const char * window_name, int width, int height, int scale) :
+monitor::monitor(const char * window_name, int width, int height, int scale) :
     _width {width},
     _height {height},
     _scale {scale}
@@ -37,14 +37,14 @@ display::display(const char * window_name, int width, int height, int scale) :
     }
 }
 
-display::~display() {
+monitor::~monitor() {
     SDL_DestroyTexture(_texture);
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
     SDL_Quit();
 }
 
-void display::draw(uint32_t const & pixels) {
+void monitor::draw(uint32_t const & pixels) {
     int result;
 
     result = SDL_UpdateTexture(_texture, nullptr, &pixels, _width * sizeof(uint32_t));
@@ -60,7 +60,7 @@ void display::draw(uint32_t const & pixels) {
     SDL_RenderPresent(_renderer);
 }
 
-void display::clear() {
+void monitor::clear() {
     SDL_RenderClear(_renderer);
     SDL_RenderPresent(_renderer);
 }

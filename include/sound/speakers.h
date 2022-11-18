@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <queue>
+#include "sound_interface.h"
 
 constexpr int AMPLITUDE = 28000;
 constexpr int FREQUENCY = 44100;
@@ -19,18 +20,18 @@ struct BeepObject
     int samplesLeft;
 };
 
-class speakers {
+class speakers : public sound_interface {
 public:
     speakers();
     ~speakers();
-    void play();
-    void stop() const;
+    void play() override;
+    void stop() const override;
 
     void generateSamples(uint16_t* stream, int length);
 
+
 private:
     SDL_AudioDeviceID _audio_device;
-
     SDL_AudioSpec _desiredSpec {
             .freq = FREQUENCY,
             .format = AUDIO_S16SYS,
@@ -43,7 +44,6 @@ private:
     SDL_AudioSpec _obtainedSpec;
 
     std::queue<BeepObject> _beeps;
-
 };
 
 
