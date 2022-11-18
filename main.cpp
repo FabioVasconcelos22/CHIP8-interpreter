@@ -6,9 +6,7 @@
 #include "display/monitor.h"
 #include "display/display_interface.h"
 
-
 int main (int argc, char **argv) {
-
     auto timestamp = std::chrono::system_clock::now ();
     auto cpu_timestamp = std::chrono::system_clock::now();
     auto timers_timestamp = std::chrono::system_clock::now();

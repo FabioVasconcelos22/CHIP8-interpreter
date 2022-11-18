@@ -120,6 +120,7 @@ void chip8::run_instruction() {
 void chip8::interpret_0_group(uint16_t const & inst) {
     switch (inst & 0x00FF) {
         case 0x00E0: {
+            // Clears the screen.
             _pixels.fill(OFF_COLOR);
             _draw = true;
             }
@@ -127,7 +128,9 @@ void chip8::interpret_0_group(uint16_t const & inst) {
     std::cout << "|_____0x0E0" << std::endl;
 #endif
             break;
+
         case 0x00EE:
+            // Returns from a subroutine.
             if (!_stack.empty()) {
                 _program_counter = _stack.top();
                 _stack.pop();
@@ -144,15 +147,18 @@ void chip8::interpret_0_group(uint16_t const & inst) {
 }
 
 void chip8::interpret_1_group(const uint16_t &inst) {
+    // Jumps to address NNN.
     _program_counter = inst & 0x0FFF;
 }
 
 void chip8::interpret_2_group(const uint16_t &inst) {
+    // Calls subroutine at NNN.
     _stack.push(_program_counter);
     _program_counter = inst & 0X0FFF;
 }
 
 void chip8::interpret_3_group(const uint16_t &inst) {
+    // Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block);
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
@@ -164,6 +170,7 @@ void chip8::interpret_3_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_4_group(const uint16_t &inst) {
+    // Skips the next instruction if VX does not equal NN. (Usually the next instruction is a jump to skip a code block);
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
@@ -176,6 +183,7 @@ void chip8::interpret_4_group(const uint16_t &inst) {
 
 
 void chip8::interpret_5_group(const uint16_t &inst) {
+    // Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block);
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t VY = (inst & 0x00F0) >> 4;
 
@@ -187,6 +195,7 @@ void chip8::interpret_5_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_6_group(const uint16_t &inst) {
+    // Sets VX to NN.
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint16_t NN = inst & 0x00FF;
 
@@ -195,6 +204,7 @@ void chip8::interpret_6_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_7_group(const uint16_t &inst) {
+    // Adds NN to VX. (Carry flag is not changed);
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint16_t NN = inst & 0x00FF;
 
@@ -213,30 +223,37 @@ void chip8::interpret_8_group(const uint16_t &inst) {
 
     switch (x) {
         case 0:
+            // Sets VX to the value of VY.
             _registers[VX] = _registers[VY];
             break;
         case 0x01:
+            // Sets VX to VX or VY. (Bitwise OR operation);
             _registers[VX] |= _registers[VY];
             break;
         case 0x02:
+            // Sets VX to VX and VY. (Bitwise AND operation);
             _registers[VX] &= _registers[VY];
             break;
         case 0x03:
+            // Sets VX to VX xor VY.
             _registers[VX] ^= _registers[VY];
             break;
         case 0x04: {
+            // Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there is not.
             uint16_t sum = _registers[VX] + _registers[VY];
             _registers[VX] = sum;
             _registers[0x0F] = (sum > 255) ? 1 : 0;
             break;
         }
         case 0x05: {
+            // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there is not.
             int diff = _registers[VX] - _registers[VY];
             _registers[VX] = diff;
             _registers[0x0F] = (diff < 0) ? 0 : 1;
             break;
         }
         case 0x06:
+            // Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
             if (_shift_quirk) {
                 // VX = VX >> 1
                 bool flag = _registers[VX] % 2;
@@ -250,12 +267,14 @@ void chip8::interpret_8_group(const uint16_t &inst) {
             }
             break;
         case 0x07: {
+            // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there is not.
             int diff = _registers[VY] - _registers[VX];
             _registers[VX] = diff;
             _registers[0x0F] = (diff < 0) ? 0 : 1;
             break;
         }
         case 0x0E:
+            // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there is not.
             if (_shift_quirk) {
                 // VX = VX << 1
                 bool flag = _registers[VX] >> 7;
@@ -275,6 +294,7 @@ void chip8::interpret_8_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_9_group(const uint16_t &inst) {
+    // Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block);
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t VY = (inst & 0x00F0) >> 4;
 
@@ -286,15 +306,18 @@ void chip8::interpret_9_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_A_group(const uint16_t &inst) {
+    // Sets I to the address NNN.
     _index_register = inst & 0x0FFF;
     _program_counter += 2;
 }
 
 void chip8::interpret_B_group(const uint16_t &inst) {
+    // Jumps to the address NNN plus V0.
     _program_counter = _registers[0] + (inst & 0x0FFF);
 }
 
 void chip8::interpret_C_group(const uint16_t &inst) {
+    // Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
     uint8_t VX = (inst & 0x0F00) >> 8;
     uint8_t NN = inst & 0x00FF;
 
@@ -303,6 +326,12 @@ void chip8::interpret_C_group(const uint16_t &inst) {
 }
 
 void chip8::interpret_D_group(const uint16_t &inst) {
+    // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+    // Each row of 8 pixels is read as bit-coded starting from memory location I;
+    // I value does not change after the execution of this instruction.
+    // As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn,
+    // and to 0 if that does not happen.
+
     uint8_t startX = (inst & 0x0F00) >> 8;
     uint8_t startY = (inst & 0x00F0) >> 4;
     uint8_t height = inst & 0x000F;
@@ -353,11 +382,15 @@ void chip8::interpret_E_group(const uint16_t &inst) {
 #endif
     switch (sub_inst) {
         case 0x9E:
+            // Skips the next instruction if the key stored in VX is pressed.
+            // (Usually the next instruction is a jump to skip a code block);
             if ( key_pressed == _registers [VX]) {
                 _program_counter += 2;
             }
             break;
         case 0xA1:
+            // Skips the next instruction if the key stored in VX is not pressed.
+            // (Usually the next instruction is a jump to skip a code block);
             if ( key_pressed != _registers [VX]) {
                 _program_counter += 2;
             }
@@ -377,9 +410,12 @@ void chip8::interpret_F_group(const uint16_t &inst) {
 #endif
     switch (sub_inst) {
         case 0x07:
+            // Sets VX to the value of the _delay timer.
             _registers[VX] = _delay;
             break;
         case 0x0A: {
+            // A key press is awaited, and then stored in VX.
+            // (Blocking Operation. All instruction halted until next key event);
             auto key_pressed = false;
             for (int i = 0; i < 16; ++i) {
                 if (_keyboard->get_key_value(i)) {
@@ -395,18 +431,27 @@ void chip8::interpret_F_group(const uint16_t &inst) {
             break;
         }
         case 0x15:
+            // Sets the _delay timer to VX.
             _delay = _registers[VX];
             break;
         case 0x18:
+            // Sets the _sound timer to VX.
             _sound = _registers[VX];
             break;
         case 0x1E:
+            // Adds VX to I. VF is not affected.
             _index_register += _registers[VX];
             break;
         case 0x29:
+            // Sets I to the location of the sprite for the character in VX.
+            // Characters 0-F (in hexadecimal) are represented by a 4x5 font.
             _index_register = chip8_constant::FONT_START_ADDR + _registers[VX] * 5; //5 bytes per font character
             break;
         case 0x33: {
+            // Stores the binary-coded decimal representation of VX, with the most significant of three digits
+            // at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.
+            // (In other words, take the decimal representation of VX, place the hundreds digit in memory at
+            // location in I, the tens digit at location I+1, and the ones digit at location I+2.);
             uint16_t decimal_number = _registers[VX];
             std::array <uint8_t, 3> data {};
 
@@ -422,20 +467,24 @@ void chip8::interpret_F_group(const uint16_t &inst) {
         }
             break;
         case 0x55:
+            // Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is
+            // increased by 1 for each value written, but I itself is left unmodified.
             for (uint8_t i = 0; i <= VX; ++i) {
                 _ram.write( &_registers[i], 1, _index_register + i);
             }
 
-            // if not quirk, also set I = I + X + 1
+            // if not load store quirk, also set I = I + X + 1
             if (!_load_store_quirk) {
                 _index_register += VX + 1;
             }
             break;
         case 0x65: {
+            // Fills from V0 to VX (including VX) with values from memory, starting at address I.
+            // The offset from I is increased by 1 for each value read, but I itself is left unmodified.
             for (uint8_t i = 0; i <= VX; ++i) {
                 _registers[i] = _ram.read <uint8_t> (_index_register+i);
             }
-            // if not quirk, also set I = I + X + 1
+            // if not load store quirk, also set I = I + X + 1
             if (!_load_store_quirk) {
                 _index_register += VX + 1;
             }
