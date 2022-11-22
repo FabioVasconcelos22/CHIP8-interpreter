@@ -8,11 +8,12 @@
 #include <string>
 #include <memory>
 #include <chrono>
+#include <map>
 
 
 #include "memory.h"
-#include "keyboard.h"
-#include "sound/speakers.h"
+#include "inputs/inputs_interface.h"
+#include "sound/sound_interface.h"
 #include "display/display_interface.h"
 
 namespace chip8_constant {
@@ -27,13 +28,30 @@ namespace chip8_constant {
     using namespace std::chrono;
     constexpr auto CPU_FRAME_RATE = 2ms; //500Hz
     constexpr auto TIMERS_FRAME_RATE = 16ms; //60Hz
+
+    constexpr std::map <char, uint16_t> KEYS = {
+            {'1', 0x01},
+            {'2', 0x02},
+            {'3', 0x03},
+            {'4', 0x0C},
+            {'q', 0x04},
+            {'w', 0x05},
+            {'e', 0x06},
+            {'r', 0x0D},
+            {'a', 0x07},
+            {'s', 0x08},
+            {'d', 0x09},
+            {'f', 0x0E},
+            {'z', 0x0A},
+            {'x', 0x00},
+            {'c', 0x0B},
+            {'v', 0x0F}
+    };
 }
 
 class chip8 {
 public:
-    chip8(keyboard & keyboard,
-          bool shift_quirk,
-          bool load_store_quirk);
+    chip8(inputs_interface * keyboard, bool shift_quirk, bool load_store_quirk);
     ~chip8() = default;
 
     void run_instruction ();
@@ -71,7 +89,7 @@ private:
 
     memory _ram {chip8_constant::MEMORY_SIZE};
 
-    keyboard* _keyboard;
+    inputs_interface* _keyboard;
 
     bool _draw = false;
 

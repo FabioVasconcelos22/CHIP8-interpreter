@@ -6,6 +6,7 @@
 
 class display_interface {
 public:
+    ~display_interface() = default;
     virtual void draw(uint32_t const & pixels) = 0;
     virtual void clear() = 0;
 };

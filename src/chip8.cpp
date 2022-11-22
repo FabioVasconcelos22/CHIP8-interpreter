@@ -4,8 +4,8 @@
 
 //#define DEBUG_MODE
 
-chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
-    _keyboard { &keyboard},
+chip8::chip8(inputs_interface * keyboard, bool shift_quirk, bool load_store_quirk) :
+    _keyboard { keyboard},
     _shift_quirk {shift_quirk},
     _load_store_quirk {load_store_quirk}
 {
@@ -14,6 +14,9 @@ chip8::chip8(keyboard & keyboard, bool shift_quirk, bool load_store_quirk) :
     _timestamp = std::chrono::system_clock::now ();
     _cpu_timestamp = std::chrono::system_clock::now();
     _timers_timestamp = std::chrono::system_clock::now();
+
+    _delay = 0;
+    _sound = 0;
 }
 
 bool chip8::load_rom(const std::string& rom_path) {

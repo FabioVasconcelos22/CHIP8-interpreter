@@ -4,7 +4,8 @@
 
 #include "chip8.h"
 #include "display/monitor.h"
-#include "display/display_interface.h"
+#include "sound/speakers.h"
+#include "inputs/keyboard.h"
 
 int main (int argc, char **argv) {
     auto timestamp = std::chrono::system_clock::now ();
@@ -20,15 +21,17 @@ int main (int argc, char **argv) {
 
     std::string rom = argv[1];
 
-    const struct quirks {
-        bool shift;
+    struct quirks {
+        const bool shift;
         bool load_store;
     } quirks {
             static_cast<bool>(argv[2]),
             static_cast<bool>(argv[3])
     };
 
-    keyboard keyboard;
+    std::unique_ptr <inputs_interface> inputs = std::make_unique <keyboard>(
+            chip8_constant::KEYS
+            );
 
     std::unique_ptr <display_interface> display = std::make_unique <monitor>(
             "CHIP8",
@@ -39,7 +42,7 @@ int main (int argc, char **argv) {
 
     std::unique_ptr <sound_interface> sound = std::make_unique<speakers>();
 
-    chip8 cpu (keyboard, quirks.shift, quirks.load_store);
+    chip8 cpu (inputs.get(), quirks.shift, quirks.load_store);
 
     if (!cpu.load_rom(rom)) {
         std::cout << "Rom file not found" << std::endl;
@@ -56,10 +59,10 @@ int main (int argc, char **argv) {
                     running = false;
                     break;
                 case SDL_KEYDOWN:
-                    keyboard.set_key(event.key.keysym.sym);
+                    inputs->set_key(event.key.keysym.sym);
                     break;
                 case SDL_KEYUP:
-                    keyboard.clear_key(event.key.keysym.sym);
+                    inputs->clear_key(event.key.keysym.sym);
                     break;
             }
         }

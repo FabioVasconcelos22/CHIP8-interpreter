@@ -4,6 +4,7 @@
 
 class sound_interface {
 public:
+    ~sound_interface() = default;
     virtual void play() = 0;
     virtual void stop() const = 0;
 };

@@ -1,18 +1,33 @@
-#include "keyboard.h"
+#include "inputs/keyboard.h"
 #include <cctype>
 
-bool keyboard::get_key_value(uint8_t const & index) const {
-    return _keys [index];
+keyboard::keyboard(std::map<char, uint16_t>  & key_map) :
+    _keyboard {key_map} { }
+
+bool keyboard::get_key_value(uint8_t const & key) const {
+    std::optional <uint16_t> res = valid(key);
+    if ( res.has_value() ) {
+        return (std::find(_pressed_keys.begin(), _pressed_keys.end(), res.value()) != _pressed_keys.end());
+    }
+    return false;
 }
 
 void keyboard::set_key(uint8_t const & key) {
-    uint8_t index = ascii_to_chip8_key (key);
-    _keys [index] = true;
+    std::optional <uint16_t> res = valid(key);
+
+    if (res.has_value()) {
+        _pressed_keys.push_back(res.value());
+    }
 }
 
 void keyboard::clear_key(uint8_t const & key) {
-    uint8_t index = ascii_to_chip8_key (key);
-    _keys [index] = false;
+    std::optional <uint16_t> res = valid(key);
+
+    if (res.has_value()) {
+        _pressed_keys.erase(
+                std::find(_pressed_keys.begin(), _pressed_keys.end(),res.value())
+                );
+    }
 }
 
 uint8_t keyboard::ascii_to_chip8_key(const uint8_t &key) {
@@ -52,4 +67,12 @@ uint8_t keyboard::ascii_to_chip8_key(const uint8_t &key) {
         default:
             return 0xFF;
     }
+}
+
+std::optional<uint16_t> keyboard::valid(char const & c) const {
+    for (auto [character, decode] : _keyboard) {
+        if (character == c)
+            return decode;
+    }
+    return {};
 }
