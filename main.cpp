@@ -24,8 +24,8 @@ int main (int argc, char **argv) {
         bool shift;
         bool load_store;
     } quirks {
-            static_cast<bool>(argv[2]),
-            static_cast<bool>(argv[3])
+            static_cast<bool>(std::stoi(argv[2])),
+            static_cast<bool>(std::stoi(argv[3]))
     };
 
     keyboard keyboard;
