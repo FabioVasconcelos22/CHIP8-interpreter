@@ -1,4 +1,4 @@
-#Crash Course 
+# CHIP 8 Emulator
 
 ## Clone the repository and submodules
 
@@ -32,6 +32,10 @@ git clone --recurse-submodules git@github.com:FabioVasconcelos22/CHIP8-interpret
  
  
 # Chip 8 description
+
+## Wiki
+
+https://en.wikipedia.org/wiki/CHIP-8
 
 ## 16 8-bit register
 
